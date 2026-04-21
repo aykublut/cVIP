@@ -345,7 +345,7 @@ export default function InlineCV() {
         {/* ========================================================= */}
         {/* KUSURSUZ ZOOM VE SCROLL MİMARİSİ */}
         {/* ========================================================= */}
-        <div className="flex-1 w-full h-full overflow-auto custom-scrollbar flex justify-center items-center lg:pl-[240px] relative z-10">
+        <div className="flex-1 w-full h-full overflow-auto custom-scrollbar flex justify-center items-center lg:pl-15 relative z-10">
           <div
             style={{
               width: `calc(210mm * ${scale})`,

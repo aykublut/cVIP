@@ -12,14 +12,16 @@ interface CVStore {
   addExperience: () => void;
   updateExperience: (id: string, data: Partial<Experience>) => void;
   removeExperience: (id: string) => void;
+  reorderExperiences: (from: number, to: number) => void;
   addEducation: () => void;
   updateEducation: (id: string, data: Partial<Education>) => void;
   removeEducation: (id: string) => void;
+  reorderEducations: (from: number, to: number) => void;
   updateSkills: (skills: string[]) => void;
+  clearAllData: () => void;
 }
 
 const initialCVData: CVData = {
-  // YENİ: photo: '' eklendi
   personalInfo: {
     fullName: "",
     jobTitle: "",
@@ -56,6 +58,7 @@ export const useCVStore = create<CVStore>()(
           },
         })),
 
+      /* ── Deneyim ── */
       addExperience: () =>
         set((state) => ({
           cvData: {
@@ -92,6 +95,15 @@ export const useCVStore = create<CVStore>()(
           },
         })),
 
+      reorderExperiences: (from, to) =>
+        set((state) => {
+          const arr = [...state.cvData.experiences];
+          const [moved] = arr.splice(from, 1);
+          arr.splice(to, 0, moved);
+          return { cvData: { ...state.cvData, experiences: arr } };
+        }),
+
+      /* ── Eğitim ── */
       addEducation: () =>
         set((state) => ({
           cvData: {
@@ -128,8 +140,24 @@ export const useCVStore = create<CVStore>()(
           },
         })),
 
+      reorderEducations: (from, to) =>
+        set((state) => {
+          const arr = [...state.cvData.educations];
+          const [moved] = arr.splice(from, 1);
+          arr.splice(to, 0, moved);
+          return { cvData: { ...state.cvData, educations: arr } };
+        }),
+
       updateSkills: (skills) =>
         set((state) => ({ cvData: { ...state.cvData, skills } })),
+
+      /* Tüm veriyi sıfırla */
+      clearAllData: () =>
+        set({
+          cvData: initialCVData,
+          isEditMode: true,
+          activeThemeId: "modern-split",
+        }),
     }),
     { name: "cv-storage-v3" },
   ),

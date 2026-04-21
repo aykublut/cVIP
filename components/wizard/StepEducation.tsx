@@ -47,7 +47,7 @@ export default function StepEducation() {
               key={edu.id}
               className="bg-white p-6 md:p-8 rounded-[2rem] border border-[#E6F0FA] relative group transition-all duration-300 hover:shadow-[0_15px_40px_rgba(0,82,204,0.06)] hover:border-[#0052CC]/30"
             >
-              {/* VIP Yan Vurgu */}
+              {/* VIP Vurgu */}
               <div className="absolute left-0 top-8 bottom-8 w-1.5 bg-[#0052CC] rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
               {/* Numaralandırma */}
@@ -55,10 +55,11 @@ export default function StepEducation() {
                 {index + 1}
               </div>
 
-              {/* Silme Butonu */}
+              {/* Silme */}
               <button
                 onClick={() => removeEducation(edu.id)}
                 className="absolute right-6 top-6 w-9 h-9 bg-white text-[#8A9EBD] border border-[#E6F0FA] rounded-xl flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                aria-label="Bu eğitimi sil"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -77,6 +78,7 @@ export default function StepEducation() {
                     }
                     className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3.5 outline-none focus:bg-white focus:border-[#0052CC]/30 focus:shadow-[0_0_0_4px_rgba(0,82,204,0.08)] transition-all duration-300 font-bold text-[#0A1930] placeholder:text-[#8A9EBD]/60"
                     placeholder="Örn: Orta Doğu Teknik Üniversitesi"
+                    maxLength={120}
                   />
                 </div>
 
@@ -93,6 +95,7 @@ export default function StepEducation() {
                     }
                     className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3.5 outline-none focus:bg-white focus:border-[#0052CC]/30 focus:shadow-[0_0_0_4px_rgba(0,82,204,0.08)] transition-all duration-300 font-bold text-[#0A1930] placeholder:text-[#8A9EBD]/60"
                     placeholder="Örn: Lisans / Yüksek Lisans"
+                    maxLength={60}
                   />
                 </div>
 
@@ -109,13 +112,14 @@ export default function StepEducation() {
                     }
                     className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3.5 outline-none focus:bg-white focus:border-[#0052CC]/30 focus:shadow-[0_0_0_4px_rgba(0,82,204,0.08)] transition-all duration-300 font-bold text-[#0A1930] placeholder:text-[#8A9EBD]/60"
                     placeholder="Örn: Bilgisayar Mühendisliği"
+                    maxLength={80}
                   />
                 </div>
 
                 {/* Tarihler */}
                 <div className="flex gap-3 md:col-span-2">
                   <div className="w-1/2 group/input relative">
-                    <label className="text-[9px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1">
+                    <label className="text-[9px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1 block">
                       BAŞLANGIÇ
                     </label>
                     <input
@@ -124,7 +128,7 @@ export default function StepEducation() {
                       onChange={(e) =>
                         updateEducation(edu.id, { startDate: e.target.value })
                       }
-                      className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3 outline-none focus:bg-white focus:border-[#0052CC]/30 font-medium"
+                      className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3 outline-none focus:bg-white focus:border-[#0052CC]/30 font-medium text-[#0A1930] placeholder:text-[#8A9EBD]/60"
                       placeholder="2016"
                     />
                   </div>
@@ -132,7 +136,7 @@ export default function StepEducation() {
                     <ChevronRight className="w-4 h-4 text-[#CBD6E2]" />
                   </div>
                   <div className="w-1/2 group/input relative">
-                    <label className="text-[9px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1">
+                    <label className="text-[9px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1 block">
                       MEZUNİYET
                     </label>
                     <input
@@ -141,7 +145,7 @@ export default function StepEducation() {
                       onChange={(e) =>
                         updateEducation(edu.id, { endDate: e.target.value })
                       }
-                      className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3 outline-none focus:bg-white focus:border-[#0052CC]/30 font-medium"
+                      className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3 outline-none focus:bg-white focus:border-[#0052CC]/30 font-medium text-[#0A1930] placeholder:text-[#8A9EBD]/60"
                       placeholder="2020"
                     />
                   </div>

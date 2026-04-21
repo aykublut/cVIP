@@ -1,13 +1,25 @@
 "use client";
 
+import { useRef } from "react";
 import { useCVStore } from "@/store/useCVStore";
-import ImageUploader from "../ui/ImageUploader";
 import { User, Briefcase, Mail, Phone, MapPin, AlignLeft } from "lucide-react";
-import { FaLinkedin } from "react-icons/fa";
+import { FaLinkedin, FaGithub } from "react-icons/fa";
 
 export default function StepPersonalInfo() {
   const { cvData, updatePersonalInfo } = useCVStore();
   const { personalInfo } = cvData;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /* Fotoğrafı base64'e çevirip store'a kaydet */
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      updatePersonalInfo({ photo: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
@@ -23,17 +35,49 @@ export default function StepPersonalInfo() {
 
       {/* ÜST BÖLÜM: FOTOĞRAF VE ANA BİLGİLER */}
       <div className="flex flex-col md:flex-row gap-8 mb-8 items-start">
-        {/* Lüks Fotoğraf Alanı */}
+        {/* Fotoğraf Alanı */}
         <div className="flex flex-col items-center gap-4 shrink-0 mt-1">
-          <div className="p-1.5 rounded-full bg-gradient-to-br from-[#E6F0FA] to-[#F4F7FA] shadow-[0_8px_20px_rgba(0,20,50,0.03)] border border-[#E6F0FA] transition-transform hover:scale-105 duration-300">
-            <ImageUploader className="w-28 h-28" />
-          </div>
-          <span className="text-[9px] text-[#8A9EBD] font-black uppercase tracking-[0.2em]">
-            PROFESYONEL PORTRE
-          </span>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-1.5 rounded-full bg-gradient-to-br from-[#E6F0FA] to-[#F4F7FA] shadow-[0_8px_20px_rgba(0,20,50,0.03)] border border-[#E6F0FA] transition-transform hover:scale-105 duration-300 focus:outline-none focus:ring-2 focus:ring-[#0052CC]/30"
+            aria-label="Profil fotoğrafı yükle"
+          >
+            {personalInfo.photo ? (
+              <img
+                src={personalInfo.photo}
+                alt="Profil fotoğrafı"
+                className="w-28 h-28 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-28 h-28 rounded-full bg-[#F4F7FA] flex items-center justify-center">
+                <User className="w-10 h-10 text-[#CBD6E2]" />
+              </div>
+            )}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
+          {personalInfo.photo ? (
+            <button
+              type="button"
+              onClick={() => updatePersonalInfo({ photo: "" })}
+              className="text-[9px] text-red-400 font-black uppercase tracking-[0.15em] hover:text-red-600 transition-colors"
+            >
+              Fotoğrafı Kaldır
+            </button>
+          ) : (
+            <span className="text-[9px] text-[#8A9EBD] font-black uppercase tracking-[0.2em]">
+              PROFESYONEL PORTRE
+            </span>
+          )}
         </div>
 
-        {/* Ad & Unvan Alanı */}
+        {/* Ad & Unvan */}
         <div className="flex-1 space-y-5 w-full">
           <div className="group relative">
             <label className="flex items-center gap-2 text-[10px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1">
@@ -65,7 +109,7 @@ export default function StepPersonalInfo() {
 
       <div className="h-px w-full bg-gradient-to-r from-transparent via-[#E6F0FA] to-transparent mb-8" />
 
-      {/* ALT BÖLÜM: İLETİŞİM BİLGİLERİ */}
+      {/* İLETİŞİM BİLGİLERİ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
         <div className="group relative">
           <label className="flex items-center gap-2 text-[10px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1">
@@ -79,6 +123,7 @@ export default function StepPersonalInfo() {
             placeholder="hello@domain.com"
           />
         </div>
+
         <div className="group relative">
           <label className="flex items-center gap-2 text-[10px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1">
             <Phone className="w-3 h-3 text-[#0052CC]" /> TELEFON
@@ -91,6 +136,7 @@ export default function StepPersonalInfo() {
             placeholder="+90 555 123 4567"
           />
         </div>
+
         <div className="group relative">
           <label className="flex items-center gap-2 text-[10px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1">
             <MapPin className="w-3 h-3 text-[#0052CC]" /> LOKASYON
@@ -103,9 +149,9 @@ export default function StepPersonalInfo() {
             placeholder="Şehir, Ülke"
           />
         </div>
+
         <div className="group relative">
           <label className="flex items-center gap-2 text-[10px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1">
-            {/* React Icons'dan çekilen LinkedIn ikonu */}
             <FaLinkedin className="w-3 h-3 text-[#0052CC]" /> LİNKEDİN
           </label>
           <input
@@ -114,6 +160,20 @@ export default function StepPersonalInfo() {
             onChange={(e) => updatePersonalInfo({ linkedin: e.target.value })}
             className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-5 py-3.5 outline-none focus:bg-white focus:border-[#0052CC]/30 focus:shadow-[0_0_0_4px_rgba(0,82,204,0.08)] transition-all duration-300 font-medium text-[#0A1930] placeholder:text-[#8A9EBD]/60"
             placeholder="linkedin.com/in/username"
+          />
+        </div>
+
+        {/* GitHub — eksikti, eklendi */}
+        <div className="group relative md:col-span-2">
+          <label className="flex items-center gap-2 text-[10px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1">
+            <FaGithub className="w-3 h-3 text-[#0052CC]" /> GITHUB
+          </label>
+          <input
+            type="text"
+            value={personalInfo.github}
+            onChange={(e) => updatePersonalInfo({ github: e.target.value })}
+            className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-5 py-3.5 outline-none focus:bg-white focus:border-[#0052CC]/30 focus:shadow-[0_0_0_4px_rgba(0,82,204,0.08)] transition-all duration-300 font-medium text-[#0A1930] placeholder:text-[#8A9EBD]/60"
+            placeholder="github.com/username"
           />
         </div>
       </div>

@@ -3,6 +3,8 @@
 import { useCVStore } from "@/store/useCVStore";
 import { Plus, Trash2, Briefcase, ChevronRight } from "lucide-react";
 
+const DESCRIPTION_MAX = 600;
+
 export default function StepExperience() {
   const { cvData, addExperience, updateExperience, removeExperience } =
     useCVStore();
@@ -46,19 +48,20 @@ export default function StepExperience() {
               key={exp.id}
               className="bg-white p-6 md:p-8 rounded-[2rem] border border-[#E6F0FA] relative group transition-all duration-300 hover:shadow-[0_15px_40px_rgba(0,82,204,0.06)] hover:border-[#0052CC]/30"
             >
-              {/* Lüks VIP Vurgu Çizgisi */}
+              {/* VIP Vurgu Çizgisi */}
               <div className="absolute left-0 top-8 bottom-8 w-1.5 bg-[#0052CC] rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-              {/* Lüks Numaralandırma */}
+              {/* Numaralandırma */}
               <div className="absolute -left-3 -top-3 w-10 h-10 bg-gradient-to-br from-[#0A1930] to-[#0052CC] text-white rounded-xl flex items-center justify-center font-black text-sm shadow-[0_4px_15px_rgba(0,82,204,0.3)] transform transition-transform group-hover:scale-110">
                 {index + 1}
               </div>
 
-              {/* Akıllı Silme Butonu (Sadece hover'da çıkar) */}
+              {/* Silme Butonu */}
               <button
                 onClick={() => removeExperience(exp.id)}
                 className="absolute right-6 top-6 w-9 h-9 bg-white text-[#8A9EBD] border border-[#E6F0FA] rounded-xl flex items-center justify-center hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
                 title="Bu deneyimi sil"
+                aria-label="Bu deneyimi sil"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -77,6 +80,7 @@ export default function StepExperience() {
                     }
                     className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3 outline-none focus:bg-white focus:border-[#0052CC]/30 focus:shadow-[0_0_0_4px_rgba(0,82,204,0.08)] transition-all duration-300 font-bold text-[#0A1930] placeholder:text-[#8A9EBD]/60"
                     placeholder="Örn: Senior Software Engineer"
+                    maxLength={80}
                   />
                 </div>
 
@@ -93,6 +97,7 @@ export default function StepExperience() {
                     }
                     className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3 outline-none focus:bg-white focus:border-[#0052CC]/30 focus:shadow-[0_0_0_4px_rgba(0,82,204,0.08)] transition-all duration-300 font-bold text-[#0A1930] placeholder:text-[#8A9EBD]/60"
                     placeholder="Örn: Google Inc."
+                    maxLength={80}
                   />
                 </div>
 
@@ -134,20 +139,37 @@ export default function StepExperience() {
                 </div>
               </div>
 
-              {/* Açıklama */}
+              {/* Açıklama + karakter sayacı */}
               <div className="group/input relative">
-                <label className="flex items-center gap-2 text-[9px] font-black text-[#0A1930] uppercase tracking-[0.2em] mb-2 pl-1">
-                  BAŞARILAR & SORUMLULUKLAR
-                </label>
+                <div className="flex items-center justify-between mb-2 pl-1">
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#0A1930] uppercase tracking-[0.2em]">
+                    BAŞARILAR & SORUMLULUKLAR
+                  </label>
+                  <span
+                    className={`text-[9px] font-bold tabular-nums transition-colors ${
+                      exp.description.length > DESCRIPTION_MAX * 0.9
+                        ? "text-red-400"
+                        : "text-[#CBD6E2]"
+                    }`}
+                  >
+                    {exp.description.length}/{DESCRIPTION_MAX}
+                  </span>
+                </div>
                 <textarea
                   value={exp.description}
-                  onChange={(e) =>
-                    updateExperience(exp.id, { description: e.target.value })
-                  }
+                  onChange={(e) => {
+                    if (e.target.value.length <= DESCRIPTION_MAX)
+                      updateExperience(exp.id, { description: e.target.value });
+                  }}
                   rows={3}
                   className="w-full bg-[#F4F7FA] border border-transparent rounded-2xl px-4 py-3 outline-none focus:bg-white focus:border-[#0052CC]/30 focus:shadow-[0_0_0_4px_rgba(0,82,204,0.08)] transition-all duration-300 font-medium text-[#0A1930] placeholder:text-[#8A9EBD]/60 resize-none leading-relaxed custom-scrollbar"
-                  placeholder="Bu pozisyonda şirkete kattığınız en büyük değer neydi? (Örn: Ciroda %20 artış sağlandı...)"
+                  placeholder="Bu pozisyonda şirkete kattığınız en büyük değer neydi? Somut başarıları ve kullandığınız teknolojileri yazın. (Örn: Yeni mimari ile API yanıt süresi %40 azaltıldı.)"
                 />
+                {/* ATS ipucu */}
+                <p className="mt-1.5 pl-1 text-[9px] text-[#CBD6E2] font-medium">
+                  İpucu: Rakamlarla desteklenmiş başarılar ATS sıralamanda +%30
+                  avantaj sağlar.
+                </p>
               </div>
             </div>
           ))

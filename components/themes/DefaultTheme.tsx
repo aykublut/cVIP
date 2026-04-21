@@ -1,738 +1,832 @@
 "use client";
 
-import { useState } from "react";
 import { useCVStore } from "@/store/useCVStore";
-import EditableText from "@/components/ui/EditableText";
-import {
-  Mail,
-  Phone,
-  MapPin,
-  Plus,
-  Trash2,
-  Briefcase,
-  GraduationCap,
-} from "lucide-react";
-import { FaGithub, FaLinkedin } from "react-icons/fa";
-import ImageUploader from "../ui/ImageUploader";
+import { Mail, Phone, MapPin } from "lucide-react";
+import { FaLinkedin, FaGithub } from "react-icons/fa";
 
-export default function DefaultTheme() {
-  const {
-    cvData,
-    isEditMode,
-    updatePersonalInfo,
-    addExperience,
-    updateExperience,
-    removeExperience,
-    addEducation,
-    updateEducation,
-    removeEducation,
-    updateSkills,
-  } = useCVStore();
-
-  const { personalInfo, experiences, educations, skills } = cvData;
-  const [skillInput, setSkillInput] = useState("");
-
-  const handleAddSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && skillInput.trim()) {
-      e.preventDefault();
-      if (!skills.includes(skillInput.trim()))
-        updateSkills([...skills, skillInput.trim()]);
-      setSkillInput("");
-    }
+function toDatetime(d: string): string {
+  if (!d) return "";
+  const m: Record<string, string> = {
+    ocak: "01",
+    şubat: "02",
+    mart: "03",
+    nisan: "04",
+    mayıs: "05",
+    haziran: "06",
+    temmuz: "07",
+    ağustos: "08",
+    eylül: "09",
+    ekim: "10",
+    kasım: "11",
+    aralık: "12",
+    jan: "01",
+    feb: "02",
+    mar: "03",
+    apr: "04",
+    may: "05",
+    jun: "06",
+    jul: "07",
+    aug: "08",
+    sep: "09",
+    oct: "10",
+    nov: "11",
+    dec: "12",
   };
+  const l = d.toLowerCase().trim();
+  if (["günümüz", "present", "halen", "devam"].includes(l)) return "";
+  const y = l.match(/\d{4}/)?.[0];
+  if (!y) return "";
+  for (const [k, v] of Object.entries(m)) if (l.includes(k)) return `${y}-${v}`;
+  return y;
+}
+
+export default function MinimalistTheme() {
+  const { cvData } = useCVStore();
+  const { personalInfo, experiences, educations, skills } = cvData;
+
+  const contacts = [
+    {
+      v: personalInfo.email,
+      Icon: Mail,
+      href: `mailto:${personalInfo.email}`,
+      field: "email",
+    },
+    {
+      v: personalInfo.phone,
+      Icon: Phone,
+      href: `tel:${personalInfo.phone}`,
+      field: "phone",
+    },
+    { v: personalInfo.location, Icon: MapPin, href: null, field: "location" },
+    {
+      v: personalInfo.linkedin,
+      Icon: FaLinkedin,
+      href: `https://${personalInfo.linkedin?.replace(/^https?:\/\//, "")}`,
+      field: "linkedin",
+    },
+    {
+      v: personalInfo.github,
+      Icon: FaGithub,
+      href: `https://${personalInfo.github?.replace(/^https?:\/\//, "")}`,
+      field: "github",
+    },
+  ].filter((c) => c.v);
 
   return (
-    <div
+    <main
       className="w-full min-h-[297mm] relative overflow-hidden"
-      style={{ background: "#080806", fontFamily: "'DM Sans', sans-serif" }}
+      role="main"
+      aria-label="Curriculum Vitae"
+      data-ats-document="resume"
+      style={{ background: "#fafaf8", fontFamily: "'DM Sans', sans-serif" }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-        .et-white input,.et-white textarea,.et-white span{color:#ffffff!important}
-        .et-amber input,.et-amber textarea,.et-amber span{color:#f59e0b!important}
-        .et-cream input,.et-cream textarea,.et-cream span{color:#fef3c7!important}
-        .et-muted input,.et-muted textarea,.et-muted span{color:rgba(253,230,138,0.55)!important}
-        .et-body input,.et-body textarea,.et-body span{color:rgba(255,255,255,0.62)!important}
-        .et-dark input,.et-dark textarea,.et-dark span{color:#92400e!important}
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
+        .pf{font-family:'Playfair Display',serif}
       `}</style>
 
-      {/* ════════ HERO BAND ════════ */}
-      <div
-        className="relative w-full"
+      {/* ══════════════════════════════════
+          HERO — Tam genişlik siyah şerit
+      ══════════════════════════════════ */}
+      <header
+        data-ats-section="header"
         style={{
-          background:
-            "linear-gradient(108deg,#0a0a08 0%,#1c1200 45%,#0a0a08 100%)",
-          borderBottom: "1px solid rgba(245,158,11,0.18)",
+          background: "#111",
+          padding: "11mm 13mm 0 13mm",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
-        {/* ambient */}
+        {/* Büyük dekoratif arka plan harf — görsel derinlik */}
         <div
-          className="absolute inset-0 pointer-events-none print:hidden"
+          className="pf absolute select-none pointer-events-none"
           style={{
-            background:
-              "radial-gradient(ellipse at 52% -10%,rgba(245,158,11,0.14) 0%,transparent 55%)",
+            bottom: "-10mm",
+            right: "10mm",
+            fontSize: "180px",
+            fontWeight: 900,
+            color: "rgba(255,255,255,0.03)",
+            lineHeight: 1,
+            letterSpacing: "-0.06em",
           }}
-        />
-        {/* top line */}
-        <div
-          className="absolute top-0 left-0 right-0"
-          style={{
-            height: 2,
-            background:
-              "linear-gradient(90deg,transparent 0%,#f59e0b 35%,#fbbf24 50%,#f59e0b 65%,transparent 100%)",
-          }}
-        />
-
-        <div
-          className="relative z-10 flex items-end"
-          style={{ padding: "11mm 12mm 0", gap: "9mm" }}
+          aria-hidden="true"
         >
-          {/* ─ Photo ─ */}
-          <div className="shrink-0" style={{ marginBottom: -1 }}>
-            <div
-              style={{
-                padding: 3,
-                background: "linear-gradient(160deg,#f59e0b,#78350f)",
-                borderRadius: "6px 6px 0 0",
-              }}
-            >
-              <div
-                style={{
-                  background: "#0a0a08",
-                  borderRadius: "4px 4px 0 0",
-                  padding: "3px 3px 0 3px",
-                }}
-              >
-                <ImageUploader className="w-[26mm] h-[32mm] object-cover" />
-              </div>
-            </div>
-          </div>
+          {(personalInfo.fullName || "CV")
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2)}
+        </div>
 
-          {/* ─ Name block ─ */}
-          <div className="flex-1" style={{ paddingBottom: "10mm" }}>
-            {/* logo watermark */}
-            <div
-              className="flex items-center gap-2 mb-4"
-              style={{ opacity: 0.2 }}
-            >
-              <div
+        {/* Amber accent top line */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "3px",
+            background:
+              "linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, transparent 100%)",
+          }}
+          aria-hidden="true"
+        />
+
+        <div
+          className="relative z-10"
+          style={{ display: "flex", alignItems: "flex-end", gap: "10mm" }}
+        >
+          {/* Fotoğraf */}
+          {personalInfo.photo && (
+            <div style={{ flexShrink: 0, marginBottom: -1 }}>
+              <img
+                src={personalInfo.photo}
+                alt={personalInfo.fullName || "Profile"}
                 style={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: 3,
-                  background: "linear-gradient(135deg,#f59e0b,#b45309)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width: "30mm",
+                  height: "38mm",
+                  objectFit: "cover",
+                  display: "block",
+                  filter: "grayscale(20%) contrast(1.05)",
                 }}
-              >
-                <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                  <path d="M1 9L5 1.5L9 9H1Z" fill="white" opacity="0.9" />
-                  <path
-                    d="M3.5 9L5 5.5L6.5 9H3.5Z"
-                    fill="white"
-                    opacity="0.4"
-                  />
-                </svg>
-              </div>
-              <span
+              />
+            </div>
+          )}
+
+          {/* İsim bloğu */}
+          <div style={{ flex: 1, paddingBottom: "9mm" }}>
+            {/* Unvan — üstte, küçük */}
+            <div style={{ marginBottom: "4px" }}>
+              <span className="sr-only">Job Title: </span>
+              <p
                 style={{
-                  fontFamily: "'Playfair Display',serif",
-                  fontSize: 10,
-                  fontWeight: 700,
+                  fontSize: "9px",
+                  fontWeight: 500,
+                  letterSpacing: "0.32em",
+                  textTransform: "uppercase",
                   color: "#f59e0b",
                 }}
+                aria-label="Job Title"
               >
-                c<span style={{ color: "#fbbf24" }}>VIP</span>
-              </span>
+                {personalInfo.jobTitle}
+              </p>
             </div>
 
-            {/* name */}
-            <div
-              className="et-white"
-              style={{
-                fontFamily: "'Playfair Display',serif",
-                fontSize: "2.9rem",
-                lineHeight: 1,
-                fontWeight: 700,
-                marginBottom: 6,
-              }}
-            >
-              <EditableText
-                value={personalInfo.fullName}
-                onChange={(v) => updatePersonalInfo({ fullName: v })}
-                placeholder="Ad Soyad"
-                className="block"
-              />
-            </div>
-
-            {/* title */}
-            <div
-              className="et-amber"
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.32em",
-                textTransform: "uppercase",
-                marginBottom: "8mm",
-              }}
-            >
-              <EditableText
-                value={personalInfo.jobTitle}
-                onChange={(v) => updatePersonalInfo({ jobTitle: v })}
-                placeholder="Pozisyon Unvanı"
-                className="block"
-              />
-            </div>
-
-            {/* contact row */}
-            <div
-              className="flex flex-wrap items-center"
-              style={{ gap: "5px 18px" }}
-            >
-              {[
-                {
-                  icon: <Mail style={{ width: 10, height: 10 }} />,
-                  field: "email",
-                  placeholder: "eposta@adres.com",
-                },
-                {
-                  icon: <Phone style={{ width: 10, height: 10 }} />,
-                  field: "phone",
-                  placeholder: "+90 555 000 0000",
-                },
-                {
-                  icon: <MapPin style={{ width: 10, height: 10 }} />,
-                  field: "location",
-                  placeholder: "Şehir, Ülke",
-                },
-                {
-                  icon: <FaLinkedin style={{ width: 10, height: 10 }} />,
-                  field: "linkedin",
-                  placeholder: "linkedin.com/in/...",
-                },
-                {
-                  icon: <FaGithub style={{ width: 10, height: 10 }} />,
-                  field: "github",
-                  placeholder: "github.com/...",
-                },
-              ].map(({ icon, field, placeholder }) => (
-                <div
-                  key={field}
-                  className="flex items-center gap-[5px]"
-                  style={{ color: "rgba(245,158,11,0.45)" }}
-                >
-                  {icon}
-                  <div
-                    className="et-muted"
-                    style={{ fontSize: 10, fontWeight: 500 }}
-                  >
-                    <EditableText
-                      value={(personalInfo as any)[field]}
-                      onChange={(v) =>
-                        updatePersonalInfo({ [field]: v } as any)
-                      }
-                      placeholder={placeholder}
-                      className="block"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ─ Summary ─ */}
-          <div
-            className="shrink-0"
-            style={{
-              width: "62mm",
-              paddingBottom: "10mm",
-              borderLeft: "1px solid rgba(245,158,11,0.15)",
-              paddingLeft: "8mm",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 8,
-                fontWeight: 700,
-                letterSpacing: "0.35em",
-                textTransform: "uppercase",
-                color: "rgba(245,158,11,0.38)",
-                marginBottom: 8,
-              }}
-            >
-              Profil
-            </div>
-            <div
-              className="et-body"
-              style={{ fontSize: 10.5, lineHeight: 1.8 }}
-            >
-              <EditableText
-                value={personalInfo.summary}
-                onChange={(v) => updatePersonalInfo({ summary: v })}
-                placeholder="Kendinizi tanıtan güçlü ve özlü bir paragraf yazın..."
-                className="block"
-                isMultiline={true}
-              />
+            {/* İsim — büyük, beyaz */}
+            <div>
+              <span className="sr-only">Candidate Name: </span>
+              <h1
+                className="pf"
+                style={{
+                  fontSize: "3.2rem",
+                  fontWeight: 700,
+                  color: "#fff",
+                  lineHeight: 1.0,
+                  letterSpacing: "-0.01em",
+                }}
+                aria-label="Full Name"
+              >
+                {personalInfo.fullName}
+              </h1>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ════════ ANA GÖVDE ════════ */}
-      <div className="flex w-full" style={{ minHeight: "calc(297mm - 82mm)" }}>
-        {/* ── Sol Sütun: Yetenekler + Eğitim ── */}
-        <div
-          className="flex flex-col shrink-0"
-          style={{
-            width: "52mm",
-            background: "#0b0b09",
-            borderRight: "1px solid rgba(245,158,11,0.1)",
-            padding: "9mm 7mm",
-            gap: "7mm",
-          }}
-        >
-          {/* Yetenekler */}
-          <div>
-            <div
-              className="flex items-center gap-2 mb-4"
-              style={{
-                fontSize: 8,
-                fontWeight: 700,
-                letterSpacing: "0.35em",
-                textTransform: "uppercase",
-                color: "rgba(245,158,11,0.38)",
-              }}
-            >
-              Yetenekler
+        {/* İletişim bandı — hero içinde alt şerit */}
+        {contacts.length > 0 && (
+          <address
+            className="relative z-10 not-italic"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              marginTop: "6mm",
+            }}
+            aria-label="Contact Information"
+            data-ats-section="contact"
+          >
+            {contacts.map(({ v, Icon, href, field }, i) => (
               <div
-                className="flex-1 h-px"
-                style={{ background: "rgba(245,158,11,0.1)" }}
-              />
-            </div>
-            <div className="flex flex-col gap-[6px]">
-              {skills.map((skill, i) => (
-                <div key={i} className="group relative flex items-center gap-2">
-                  <div
+                key={field}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  padding: "8px 14px 8px 0",
+                  marginRight: "14px",
+                  borderRight:
+                    i < contacts.length - 1
+                      ? "1px solid rgba(255,255,255,0.08)"
+                      : "none",
+                  paddingRight: i < contacts.length - 1 ? "14px" : "0",
+                }}
+              >
+                <Icon
+                  style={{
+                    width: 10,
+                    height: 10,
+                    color: "#f59e0b",
+                    flexShrink: 0,
+                  }}
+                  aria-hidden="true"
+                />
+                <span className="sr-only">{field}: </span>
+                {href ? (
+                  <a
+                    href={href}
                     style={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: "50%",
-                      flexShrink: 0,
-                      background:
-                        i % 3 === 0
-                          ? "#f59e0b"
-                          : i % 3 === 1
-                            ? "rgba(245,158,11,0.4)"
-                            : "rgba(245,158,11,0.15)",
+                      fontSize: "9.5px",
+                      color: "rgba(255,255,255,0.6)",
+                      fontWeight: 400,
+                      textDecoration: "none",
                     }}
-                  />
+                    target={
+                      ["linkedin", "github"].includes(field)
+                        ? "_blank"
+                        : undefined
+                    }
+                    rel="noopener noreferrer"
+                    data-ats-field={field}
+                  >
+                    {v}
+                  </a>
+                ) : (
                   <span
                     style={{
-                      fontSize: 11,
-                      fontWeight: 500,
-                      color: "rgba(253,230,138,0.78)",
+                      fontSize: "9.5px",
+                      color: "rgba(255,255,255,0.6)",
+                      fontWeight: 400,
                     }}
+                    data-ats-field={field}
                   >
-                    {skill}
+                    {v}
                   </span>
-                  {isEditMode && (
-                    <button
-                      onClick={() =>
-                        updateSkills(skills.filter((s) => s !== skill))
-                      }
-                      className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-                      style={{ color: "#ef4444" }}
-                    >
-                      <Trash2 style={{ width: 10, height: 10 }} />
-                    </button>
-                  )}
-                </div>
-              ))}
-              {isEditMode && (
-                <input
-                  type="text"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={handleAddSkill}
-                  placeholder="+ Ekle (Enter)"
-                  className="outline-none w-full mt-1 print:hidden"
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 500,
-                    background: "transparent",
-                    border: "1px dashed rgba(245,158,11,0.22)",
-                    color: "rgba(245,158,11,0.5)",
-                    padding: "4px 8px",
-                    borderRadius: 4,
-                  }}
-                />
-              )}
-            </div>
-          </div>
-
-          <div style={{ height: 1, background: "rgba(245,158,11,0.07)" }} />
-
-          {/* Eğitim */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <div
-                className="flex items-center gap-2"
-                style={{
-                  fontSize: 8,
-                  fontWeight: 700,
-                  letterSpacing: "0.35em",
-                  textTransform: "uppercase",
-                  color: "rgba(245,158,11,0.38)",
-                }}
-              >
-                <GraduationCap
-                  style={{ width: 10, height: 10, color: "#f59e0b" }}
-                />
-                Eğitim
-              </div>
-              {isEditMode && (
-                <button
-                  onClick={addEducation}
-                  className="print:hidden"
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 700,
-                    color: "#f59e0b",
-                    background: "rgba(245,158,11,0.1)",
-                    border: "1px solid rgba(245,158,11,0.18)",
-                    padding: "2px 6px",
-                    borderRadius: 4,
-                  }}
-                >
-                  + Ekle
-                </button>
-              )}
-            </div>
-            <div className="flex flex-col gap-5">
-              {educations.map((edu) => (
-                <div key={edu.id} className="relative group">
-                  {isEditMode && (
-                    <button
-                      onClick={() => removeEducation(edu.id)}
-                      className="absolute -right-1 -top-1 opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-                      style={{ color: "#ef4444" }}
-                    >
-                      <Trash2 style={{ width: 10, height: 10 }} />
-                    </button>
-                  )}
-                  <div
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 600,
-                      color: "#f59e0b",
-                      letterSpacing: "0.05em",
-                      marginBottom: 3,
-                    }}
-                  >
-                    <span>{edu.startDate || "—"}</span>
-                    <span
-                      style={{ color: "rgba(245,158,11,0.3)", margin: "0 3px" }}
-                    >
-                      ›
-                    </span>
-                    <span>{edu.endDate || "—"}</span>
-                  </div>
-                  <div
-                    className="et-cream"
-                    style={{
-                      fontSize: 11.5,
-                      fontWeight: 700,
-                      lineHeight: 1.25,
-                      marginBottom: 3,
-                    }}
-                  >
-                    <EditableText
-                      value={edu.school}
-                      onChange={(v) => updateEducation(edu.id, { school: v })}
-                      placeholder="Okul / Üniversite"
-                      className="block"
-                    />
-                  </div>
-                  <div
-                    className="et-muted"
-                    style={{ fontSize: 10, fontWeight: 500 }}
-                  >
-                    <EditableText
-                      value={edu.degree}
-                      onChange={(v) => updateEducation(edu.id, { degree: v })}
-                      placeholder="Derece"
-                      className="inline"
-                    />
-                    <span
-                      style={{ color: "rgba(245,158,11,0.2)", margin: "0 4px" }}
-                    >
-                      ·
-                    </span>
-                    <EditableText
-                      value={edu.fieldOfStudy}
-                      onChange={(v) =>
-                        updateEducation(edu.id, { fieldOfStudy: v })
-                      }
-                      placeholder="Bölüm"
-                      className="inline"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Sağ Sütun: Deneyim ── */}
-        <div
-          className="flex-1 flex flex-col"
-          style={{ padding: "9mm 11mm", gap: "6mm", position: "relative" }}
-        >
-          {/* ruled lines */}
-          <div
-            className="absolute inset-0 pointer-events-none print:hidden"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(245,158,11,0.022) 1px,transparent 1px)",
-              backgroundSize: "100% 22px",
-            }}
-          />
-
-          {/* Başlık */}
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  background: "rgba(245,158,11,0.1)",
-                  border: "1px solid rgba(245,158,11,0.2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#f59e0b",
-                }}
-              >
-                <Briefcase style={{ width: 13, height: 13 }} />
-              </div>
-              <span
-                style={{
-                  fontFamily: "'Playfair Display',serif",
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: "#ffffff",
-                  letterSpacing: "0.02em",
-                }}
-              >
-                Deneyim
-              </span>
-              <div
-                style={{
-                  flex: 1,
-                  height: 1,
-                  background:
-                    "linear-gradient(90deg,rgba(245,158,11,0.35),transparent)",
-                  minWidth: 20,
-                }}
-              />
-            </div>
-            {isEditMode && (
-              <button
-                onClick={addExperience}
-                className="print:hidden flex items-center gap-1"
-                style={{
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  color: "#0a0a08",
-                  background: "linear-gradient(135deg,#f59e0b,#d97706)",
-                  padding: "4px 10px",
-                  borderRadius: 5,
-                  boxShadow: "0 2px 8px rgba(245,158,11,0.3)",
-                }}
-              >
-                <Plus style={{ width: 10, height: 10 }} /> EKLE
-              </button>
-            )}
-          </div>
-
-          {/* Kartlar */}
-          <div className="relative z-10 flex flex-col" style={{ gap: "5mm" }}>
-            {experiences.map((exp, idx) => (
-              <div
-                key={exp.id}
-                className="relative group"
-                style={{
-                  background:
-                    idx % 2 === 0 ? "rgba(245,158,11,0.03)" : "transparent",
-                  border: "1px solid rgba(245,158,11,0.08)",
-                  borderRadius: 6,
-                  padding: "5mm 5mm 4mm",
-                }}
-              >
-                {isEditMode && (
-                  <button
-                    onClick={() => removeExperience(exp.id)}
-                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-                    style={{ color: "#ef4444" }}
-                  >
-                    <Trash2 style={{ width: 11, height: 11 }} />
-                  </button>
                 )}
-
-                <div className="flex items-start justify-between gap-3 mb-[5px]">
-                  <div
-                    className="et-white flex-1"
-                    style={{
-                      fontFamily: "'Playfair Display',serif",
-                      fontSize: 14,
-                      fontWeight: 700,
-                      fontStyle: "italic",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    <EditableText
-                      value={exp.position}
-                      onChange={(v) =>
-                        updateExperience(exp.id, { position: v })
-                      }
-                      placeholder="Pozisyon Adı"
-                      className="block"
-                    />
-                  </div>
-                  <div
-                    className="et-dark flex items-center gap-1 shrink-0"
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 700,
-                      background: "rgba(245,158,11,0.12)",
-                      border: "1px solid rgba(245,158,11,0.25)",
-                      padding: "2px 8px",
-                      borderRadius: 20,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    <EditableText
-                      value={exp.startDate}
-                      onChange={(v) =>
-                        updateExperience(exp.id, { startDate: v })
-                      }
-                      placeholder="2020"
-                      className="w-8 text-right bg-transparent"
-                    />
-                    <span style={{ color: "rgba(180,83,9,0.5)" }}>–</span>
-                    <EditableText
-                      value={exp.endDate}
-                      onChange={(v) => updateExperience(exp.id, { endDate: v })}
-                      placeholder="Günümüz"
-                      className="w-14 bg-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div
-                  className="et-amber flex items-center gap-[5px] mb-[5px]"
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 3,
-                      height: 3,
-                      borderRadius: "50%",
-                      background: "#f59e0b",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <EditableText
-                    value={exp.company}
-                    onChange={(v) => updateExperience(exp.id, { company: v })}
-                    placeholder="Şirket Adı"
-                    className="block"
-                  />
-                </div>
-
-                <div
-                  className="et-body"
-                  style={{
-                    fontSize: 11,
-                    lineHeight: 1.75,
-                    borderTop: "1px solid rgba(245,158,11,0.07)",
-                    paddingTop: 5,
-                  }}
-                >
-                  <EditableText
-                    value={exp.description}
-                    onChange={(v) =>
-                      updateExperience(exp.id, { description: v })
-                    }
-                    placeholder="Rolünüzü, başarılarınızı ve kullandığınız teknolojileri açıklayın..."
-                    className="block text-justify"
-                    isMultiline={true}
-                  />
-                </div>
               </div>
             ))}
-          </div>
+          </address>
+        )}
+      </header>
+
+      {/* ══════════════════════════════════
+          GÖVDE
+      ══════════════════════════════════ */}
+      <div style={{ padding: "0 13mm 13mm 13mm" }}>
+        {/* ── Özet ── */}
+        {personalInfo.summary && (
+          <section
+            style={{ padding: "8mm 0 7mm", borderBottom: "1px solid #e4e4e0" }}
+            aria-label="Professional Summary"
+            data-ats-section="summary"
+          >
+            <span className="sr-only">Professional Summary</span>
+
+            <div
+              style={{ display: "flex", gap: "8mm", alignItems: "flex-start" }}
+            >
+              {/* Sol: Bölüm numarası */}
+              <div
+                style={{ flexShrink: 0, width: "8mm", paddingTop: "2px" }}
+                aria-hidden="true"
+              >
+                <span
+                  className="pf"
+                  style={{
+                    fontSize: "28px",
+                    fontWeight: 900,
+                    color: "#e8e6e0",
+                    lineHeight: 1,
+                  }}
+                >
+                  01
+                </span>
+              </div>
+
+              {/* İçerik */}
+              <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginBottom: "6px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "8px",
+                      fontWeight: 700,
+                      letterSpacing: "0.3em",
+                      textTransform: "uppercase",
+                      color: "#111",
+                    }}
+                  >
+                    Profil
+                  </span>
+                  <div
+                    style={{
+                      flex: 1,
+                      height: "1px",
+                      background:
+                        "linear-gradient(90deg, #111 0%, transparent 100%)",
+                    }}
+                    aria-hidden="true"
+                  />
+                </div>
+                <p
+                  className="pf"
+                  style={{
+                    fontSize: "13.5px",
+                    fontStyle: "italic",
+                    fontWeight: 400,
+                    color: "#333",
+                    lineHeight: 1.78,
+                    textAlign: "justify",
+                  }}
+                >
+                  {personalInfo.summary}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Deneyim ── */}
+        {experiences.length > 0 && (
+          <section
+            style={{ padding: "8mm 0 7mm", borderBottom: "1px solid #e4e4e0" }}
+            aria-label="Professional Experience"
+            data-ats-section="experience"
+          >
+            <span className="sr-only">Professional Experience</span>
+            <span className="sr-only">Work Experience</span>
+
+            <div
+              style={{ display: "flex", gap: "8mm", alignItems: "flex-start" }}
+            >
+              {/* Numara */}
+              <div
+                style={{ flexShrink: 0, width: "8mm", paddingTop: "2px" }}
+                aria-hidden="true"
+              >
+                <span
+                  className="pf"
+                  style={{
+                    fontSize: "28px",
+                    fontWeight: 900,
+                    color: "#e8e6e0",
+                    lineHeight: 1,
+                  }}
+                >
+                  02
+                </span>
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginBottom: "7mm",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "8px",
+                      fontWeight: 700,
+                      letterSpacing: "0.3em",
+                      textTransform: "uppercase",
+                      color: "#111",
+                    }}
+                  >
+                    Deneyim
+                  </span>
+                  <div
+                    style={{
+                      flex: 1,
+                      height: "1px",
+                      background:
+                        "linear-gradient(90deg, #111 0%, transparent 100%)",
+                    }}
+                    aria-hidden="true"
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6mm",
+                  }}
+                >
+                  {experiences.map((exp, idx) => (
+                    <article
+                      key={exp.id}
+                      data-ats-entry="job"
+                      aria-label={`${exp.position}${exp.company ? ` at ${exp.company}` : ""}`}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "auto 1fr",
+                        gap: "0 6mm",
+                        paddingTop: idx > 0 ? "6mm" : 0,
+                        borderTop: idx > 0 ? "1px solid #edede9" : "none",
+                      }}
+                    >
+                      {/* Sol: Tarih + Şirket — dikey */}
+                      <div style={{ width: "24mm", paddingTop: "3px" }}>
+                        {(exp.startDate || exp.endDate) && (
+                          <div style={{ marginBottom: "4px" }}>
+                            <span className="sr-only">Employment period: </span>
+                            <div
+                              style={{
+                                fontSize: "9px",
+                                color: "#999",
+                                fontStyle: "italic",
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              {exp.startDate && (
+                                <time dateTime={toDatetime(exp.startDate)}>
+                                  {exp.startDate}
+                                </time>
+                              )}
+                              {exp.startDate && exp.endDate && <br />}
+                              {exp.endDate && (
+                                <time dateTime={toDatetime(exp.endDate)}>
+                                  {exp.endDate}
+                                </time>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {exp.company && (
+                          <div>
+                            <span className="sr-only">Company: </span>
+                            <p
+                              style={{
+                                fontSize: "8.5px",
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.1em",
+                                color: "#f59e0b",
+                                lineHeight: 1.4,
+                              }}
+                              data-ats-field="company"
+                            >
+                              {exp.company}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Sağ: Pozisyon + Açıklama */}
+                      <div>
+                        <span className="sr-only">Job Title: </span>
+                        <h3
+                          className="pf"
+                          style={{
+                            fontSize: "15px",
+                            fontWeight: 700,
+                            color: "#111",
+                            letterSpacing: "-0.01em",
+                            lineHeight: 1.2,
+                            marginBottom: "5px",
+                          }}
+                          data-ats-field="job-title"
+                        >
+                          {exp.position}
+                        </h3>
+                        {exp.description && (
+                          <p
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: 300,
+                              color: "#555",
+                              lineHeight: 1.78,
+                              textAlign: "justify",
+                            }}
+                            data-ats-field="description"
+                          >
+                            {exp.description}
+                          </p>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Eğitim + Yetenekler — yan yana ── */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "8mm",
+            paddingTop: "8mm",
+          }}
+        >
+          {/* Eğitim */}
+          {educations.length > 0 && (
+            <section aria-label="Education" data-ats-section="education">
+              <span className="sr-only">Education</span>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "6mm",
+                  alignItems: "flex-start",
+                }}
+              >
+                <div
+                  style={{ flexShrink: 0, width: "8mm", paddingTop: "2px" }}
+                  aria-hidden="true"
+                >
+                  <span
+                    className="pf"
+                    style={{
+                      fontSize: "28px",
+                      fontWeight: 900,
+                      color: "#e8e6e0",
+                      lineHeight: 1,
+                    }}
+                  >
+                    03
+                  </span>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "6mm",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "8px",
+                        fontWeight: 700,
+                        letterSpacing: "0.3em",
+                        textTransform: "uppercase",
+                        color: "#111",
+                      }}
+                    >
+                      Eğitim
+                    </span>
+                    <div
+                      style={{
+                        flex: 1,
+                        height: "1px",
+                        background:
+                          "linear-gradient(90deg, #111 0%, transparent 100%)",
+                      }}
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "5mm",
+                    }}
+                  >
+                    {educations.map((edu, idx) => (
+                      <article
+                        key={edu.id}
+                        data-ats-entry="education"
+                        aria-label={`${edu.degree ?? ""}${edu.fieldOfStudy ? ` in ${edu.fieldOfStudy}` : ""}${edu.school ? ` at ${edu.school}` : ""}`}
+                        style={{
+                          paddingTop: idx > 0 ? "5mm" : 0,
+                          borderTop: idx > 0 ? "1px solid #edede9" : "none",
+                        }}
+                      >
+                        {(edu.startDate || edu.endDate) && (
+                          <div
+                            style={{
+                              fontSize: "8.5px",
+                              color: "#aaa",
+                              fontStyle: "italic",
+                              marginBottom: "2px",
+                            }}
+                          >
+                            <span className="sr-only">Dates: </span>
+                            {edu.startDate && (
+                              <time dateTime={toDatetime(edu.startDate)}>
+                                {edu.startDate}
+                              </time>
+                            )}
+                            {edu.startDate && edu.endDate && (
+                              <span aria-hidden="true"> – </span>
+                            )}
+                            {edu.endDate && (
+                              <time dateTime={toDatetime(edu.endDate)}>
+                                {edu.endDate}
+                              </time>
+                            )}
+                          </div>
+                        )}
+                        <span className="sr-only">School: </span>
+                        <h3
+                          className="pf"
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: 700,
+                            color: "#111",
+                            lineHeight: 1.2,
+                            marginBottom: "3px",
+                          }}
+                          data-ats-field="school"
+                        >
+                          {edu.school}
+                        </h3>
+                        <div
+                          style={{
+                            fontSize: "10.5px",
+                            fontWeight: 300,
+                            color: "#666",
+                            display: "flex",
+                            gap: "5px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {edu.degree && (
+                            <>
+                              <span className="sr-only">Degree: </span>
+                              <span data-ats-field="degree">{edu.degree}</span>
+                            </>
+                          )}
+                          {edu.degree && edu.fieldOfStudy && (
+                            <span style={{ color: "#ccc" }} aria-hidden="true">
+                              /
+                            </span>
+                          )}
+                          {edu.fieldOfStudy && (
+                            <>
+                              <span className="sr-only">Field of Study: </span>
+                              <span data-ats-field="field-of-study">
+                                {edu.fieldOfStudy}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Yetenekler */}
+          {skills.length > 0 && (
+            <section aria-label="Skills" data-ats-section="skills">
+              <span className="sr-only">Skills: {skills.join(", ")}</span>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "6mm",
+                  alignItems: "flex-start",
+                }}
+              >
+                <div
+                  style={{ flexShrink: 0, width: "8mm", paddingTop: "2px" }}
+                  aria-hidden="true"
+                >
+                  <span
+                    className="pf"
+                    style={{
+                      fontSize: "28px",
+                      fontWeight: 900,
+                      color: "#e8e6e0",
+                      lineHeight: 1,
+                    }}
+                  >
+                    04
+                  </span>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "6mm",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "8px",
+                        fontWeight: 700,
+                        letterSpacing: "0.3em",
+                        textTransform: "uppercase",
+                        color: "#111",
+                      }}
+                    >
+                      Yetkinlikler
+                    </span>
+                    <div
+                      style={{
+                        flex: 1,
+                        height: "1px",
+                        background:
+                          "linear-gradient(90deg, #111 0%, transparent 100%)",
+                      }}
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <ul
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "5px",
+                    }}
+                    role="list"
+                  >
+                    {skills.map((skill, i) => (
+                      <li
+                        key={i}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          fontSize: "11px",
+                          fontWeight: 400,
+                          color: "#333",
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {/* Amber nokta */}
+                        <span
+                          style={{
+                            width: "4px",
+                            height: "4px",
+                            borderRadius: "50%",
+                            background: "#f59e0b",
+                            flexShrink: 0,
+                          }}
+                          aria-hidden="true"
+                        />
+                        {skill}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
       </div>
 
-      {/* ════════ FOOTER ════════ */}
-      <div
+      {/* ── Footer ── */}
+      <footer
         style={{
-          borderTop: "1px solid rgba(245,158,11,0.12)",
-          padding: "4mm 12mm",
+          background: "#111",
+          padding: "5mm 13mm",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          background: "rgba(245,158,11,0.025)",
         }}
+        aria-hidden="true"
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <div
-            style={{
-              width: 11,
-              height: 11,
-              borderRadius: 2,
-              background: "linear-gradient(135deg,#f59e0b,#b45309)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <svg width="6" height="6" viewBox="0 0 8 8" fill="none">
-              <path d="M1 7L4 1.5L7 7H1Z" fill="white" opacity="0.9" />
-            </svg>
-          </div>
+            style={{ width: "18px", height: "2px", background: "#f59e0b" }}
+          />
           <span
+            className="pf"
             style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: 9,
-              fontWeight: 700,
-              color: "rgba(245,158,11,0.25)",
+              fontSize: "11px",
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.35)",
+              fontStyle: "italic",
             }}
           >
-            c<span style={{ color: "rgba(251,191,36,0.25)" }}>VIP</span>
+            {personalInfo.fullName}
           </span>
         </div>
         <span
           style={{
-            fontSize: 8,
+            fontSize: "7.5px",
             fontWeight: 500,
-            letterSpacing: "0.2em",
+            letterSpacing: "0.25em",
             textTransform: "uppercase",
-            color: "rgba(245,158,11,0.18)",
+            color: "rgba(255,255,255,0.2)",
           }}
         >
-          Premium Resume
+          Curriculum Vitae · {new Date().getFullYear()}
         </span>
-      </div>
-    </div>
+      </footer>
+    </main>
   );
 }

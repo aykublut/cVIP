@@ -55,7 +55,24 @@ export default function InlineCV() {
   const contentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
     contentRef: contentRef,
-    documentTitle: `cVIP_Executive_Resume`,
+    documentTitle: `CV_Export`,
+    pageStyle: `
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+      body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+  `,
   });
 
   // Dinamik Ölçeklendirme Motoru

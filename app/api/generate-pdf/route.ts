@@ -10,8 +10,6 @@ const isDev = process.env.NODE_ENV === "development";
  * Ortama göre Chromium başlatır:
  * - Development: yerel `puppeteer` (tam Chromium indirir)
  * - Production (Vercel): `puppeteer-core` + `@sparticuz/chromium` (küçük, serverless-uyumlu)
- *
- * Dinamik import sayesinde her ortamda sadece kendi paketi yüklenir.
  */
 async function launchBrowser() {
   if (isDev) {
@@ -22,7 +20,8 @@ async function launchBrowser() {
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
-        "--font-render-hinting=none",
+        // ✅ OPTİMİZASYON: Tırtıklı fontları engeller, grayscale zorlar
+        "--disable-font-subpixel-aliasing",
       ],
     });
   }
@@ -31,15 +30,12 @@ async function launchBrowser() {
   const chromium = (await import("@sparticuz/chromium")).default;
   const puppeteer = (await import("puppeteer-core")).default;
 
-  // Emoji/özel karakter desteği (opsiyonel - istersen kaldırabilirsin)
-  // await chromium.font("https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf");
-
-  // ✅ YENİ
   return puppeteer.launch({
     args: [
       ...chromium.args,
-      "--font-render-hinting=none",
       "--disable-dev-shm-usage",
+      // ✅ OPTİMİZASYON: Vercel ortamında da pürüzsüzleştirme
+      "--disable-font-subpixel-aliasing",
     ],
     executablePath: await chromium.executablePath(),
     headless: true,
@@ -63,7 +59,7 @@ export async function POST(req: NextRequest) {
     await page.setViewport({
       width: 794, // 210mm @ 96dpi
       height: 1123, // 297mm @ 96dpi
-      deviceScaleFactor: 2,
+      deviceScaleFactor: 2, // Retina kalitesi
     });
 
     const fullHtml = `<!DOCTYPE html>
@@ -73,13 +69,25 @@ export async function POST(req: NextRequest) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap&subset=latin,latin-ext" rel="stylesheet">
   <style>
+    /* ✅ KUSURSUZ PDF TİPOGRAFİSİ İÇİN HAYATİ KURALLAR */
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
+      
+      /* 1. LİGATÜR İPTALİ: l, ı, i, f harflerinin yapışmasını ve bozulmasını engeller */
+      font-variant-ligatures: none !important;
+      
+      /* 2. GEOMETRİK KESİNLİK: Chromium'un harf aralığı (kerning) hatasını çözer */
+      text-rendering: geometricPrecision !important;
+      
+      /* 3. SOFT GÖRÜNÜM: PDF'e basılırken piksellenmeyi engeller */
+      -webkit-font-smoothing: antialiased !important;
+      -moz-osx-font-smoothing: grayscale !important;
     }
+    
     html, body {
       margin: 0 !important;
       padding: 0 !important;

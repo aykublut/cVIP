@@ -12,6 +12,10 @@ import {
 } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 
+// Tüm PDF viewer'larda garantili render için font stack
+const FONT_STACK =
+  "'DM Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+
 function toDatetime(dateStr: string): string {
   if (!dateStr) return "";
   const months: Record<string, string> = {
@@ -60,39 +64,59 @@ export default function ModernSplitTheme() {
       role="main"
       aria-label="Curriculum Vitae"
       data-ats-document="resume"
+      style={{
+        fontFamily: FONT_STACK,
+        WebkitPrintColorAdjust: "exact",
+        printColorAdjust: "exact",
+      }}
     >
-      <style>{`.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}`}</style>
+      <style>{`
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
+        /* PDF/print için ekstra güvenlik katmanı — mobil viewer garantisi */
+        @media print {
+          [data-decor="true"]{display:none !important}
+          *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
+        }
+      `}</style>
 
       {/* ══ SOL KOLON ══ */}
       <div
         className="w-[38%] text-slate-300 flex flex-col relative"
         style={{
           background:
-            "linear-gradient(160deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)",
+            "linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
           padding: "14mm 11mm 12mm",
+          WebkitPrintColorAdjust: "exact",
+          printColorAdjust: "exact",
         }}
       >
+        {/* Dekoratif üst mavi çizgi — sadece preview */}
         <div
+          data-decor="true"
           className="absolute top-0 left-0 right-0 h-[3px] pointer-events-none print:hidden"
           style={{
             background:
-              "linear-gradient(90deg,transparent,rgba(59,130,246,0.6),transparent)",
+              "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.6) 50%, transparent 100%)",
           }}
           aria-hidden="true"
         />
+        {/* Dekoratif mavi hale — sadece preview */}
         <div
+          data-decor="true"
           className="absolute top-0 left-0 w-full h-72 pointer-events-none print:hidden"
           style={{
             background:
-              "radial-gradient(ellipse at 50% -10%,rgba(59,130,246,0.14) 0%,transparent 70%)",
+              "radial-gradient(ellipse at 50% -10%, rgba(59,130,246,0.14) 0%, transparent 70%)",
           }}
           aria-hidden="true"
         />
+        {/* Dekoratif nokta deseni — sadece preview */}
         <div
+          data-decor="true"
           className="absolute inset-0 pointer-events-none print:hidden"
           style={{
             backgroundImage:
-              "radial-gradient(circle,rgba(255,255,255,0.03) 1px,transparent 1px)",
+              "radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)",
             backgroundSize: "18px 18px",
           }}
           aria-hidden="true"
@@ -102,19 +126,24 @@ export default function ModernSplitTheme() {
         {personalInfo.photo && (
           <div className="flex justify-center mb-8 relative z-10">
             <div
-              className="p-[3px] rounded-full shadow-[0_0_36px_rgba(59,130,246,0.28)]"
-              style={{ background: "linear-gradient(135deg,#3b82f6,#67e8f9)" }}
+              className="p-[3px] rounded-full"
+              style={{
+                background: "linear-gradient(135deg, #3b82f6 0%, #67e8f9 100%)",
+                boxShadow: "0 0 24px rgba(59,130,246,0.28)",
+              }}
             >
               <div
                 className="p-[3px] rounded-full"
                 style={{
-                  background: "linear-gradient(160deg,#0f172a,#1e293b)",
+                  background:
+                    "linear-gradient(160deg, #0f172a 0%, #1e293b 100%)",
                 }}
               >
                 <img
                   src={personalInfo.photo}
                   alt={`${personalInfo.fullName} profile photo`}
                   className="w-36 h-36 rounded-full object-cover border-[3px] border-[#0f172a]"
+                  style={{ display: "block" }}
                 />
               </div>
             </div>
@@ -124,21 +153,39 @@ export default function ModernSplitTheme() {
         {/* İsim & Unvan */}
         <header className="text-center mb-10 relative z-10">
           <span className="sr-only">Candidate Name: </span>
-          <h1 className="text-[2.15rem] font-black uppercase tracking-[0.14em] text-white mb-2 leading-none">
+          <h1
+            className="text-[2.15rem] font-black uppercase tracking-[0.14em] text-white mb-2 leading-none"
+            style={{ fontFamily: FONT_STACK }}
+          >
             {personalInfo.fullName}
           </h1>
           <div
             className="flex items-center justify-center gap-2 my-4"
             aria-hidden="true"
           >
-            <div className="h-px w-8 bg-blue-500/40" />
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            <div className="h-px w-16 bg-blue-500" />
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            <div className="h-px w-8 bg-blue-500/40" />
+            <div
+              className="h-px w-8"
+              style={{ background: "rgba(59,130,246,0.4)" }}
+            />
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: "#3b82f6" }}
+            />
+            <div className="h-px w-16" style={{ background: "#3b82f6" }} />
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: "#3b82f6" }}
+            />
+            <div
+              className="h-px w-8"
+              style={{ background: "rgba(59,130,246,0.4)" }}
+            />
           </div>
           <span className="sr-only">Job Title: </span>
-          <h2 className="text-[11px] font-semibold tracking-[0.28em] text-blue-400 uppercase">
+          <h2
+            className="text-[11px] font-semibold tracking-[0.28em] uppercase"
+            style={{ color: "#60a5fa", fontFamily: FONT_STACK }}
+          >
             {personalInfo.jobTitle}
           </h2>
         </header>
@@ -151,7 +198,8 @@ export default function ModernSplitTheme() {
         >
           <span className="sr-only">Contact Information</span>
           <h3
-            className="text-[9px] font-black tracking-[0.42em] text-slate-500 uppercase mb-5 flex items-center gap-3"
+            className="text-[9px] font-black tracking-[0.42em] uppercase mb-5 flex items-center gap-3"
+            style={{ color: "#64748b" }}
             aria-hidden="true"
           >
             İletişim
@@ -159,7 +207,7 @@ export default function ModernSplitTheme() {
               className="h-px flex-1"
               style={{
                 background:
-                  "linear-gradient(90deg,rgba(71,85,105,0.5),transparent)",
+                  "linear-gradient(90deg, rgba(71,85,105,0.5) 0%, transparent 100%)",
               }}
             />
           </h3>
@@ -230,10 +278,11 @@ export default function ModernSplitTheme() {
                   }}
                 >
                   <div
-                    className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center text-blue-400 shrink-0"
+                    className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0"
                     style={{
                       background: "rgba(59,130,246,0.15)",
                       border: "1px solid rgba(59,130,246,0.18)",
+                      color: "#60a5fa",
                     }}
                     aria-hidden="true"
                   >
@@ -243,7 +292,8 @@ export default function ModernSplitTheme() {
                   {href ? (
                     <a
                       href={href}
-                      className="flex-1 text-slate-200 text-[11px] hover:text-blue-300 transition-colors"
+                      className="flex-1 text-[11px] transition-colors"
+                      style={{ color: "#e2e8f0" }}
                       target={
                         field === "linkedin" || field === "github"
                           ? "_blank"
@@ -260,7 +310,8 @@ export default function ModernSplitTheme() {
                     </a>
                   ) : (
                     <span
-                      className="flex-1 text-slate-200 text-[11px]"
+                      className="flex-1 text-[11px]"
+                      style={{ color: "#e2e8f0" }}
                       data-ats-field={field}
                     >
                       {value}
@@ -280,7 +331,8 @@ export default function ModernSplitTheme() {
           >
             <span className="sr-only">Skills: {skills.join(", ")}</span>
             <h3
-              className="text-[9px] font-black tracking-[0.42em] text-slate-500 uppercase mb-5 flex items-center gap-3"
+              className="text-[9px] font-black tracking-[0.42em] uppercase mb-5 flex items-center gap-3"
+              style={{ color: "#64748b" }}
               aria-hidden="true"
             >
               Uzmanlık
@@ -288,7 +340,7 @@ export default function ModernSplitTheme() {
                 className="h-px flex-1"
                 style={{
                   background:
-                    "linear-gradient(90deg,rgba(71,85,105,0.5),transparent)",
+                    "linear-gradient(90deg, rgba(71,85,105,0.5) 0%, transparent 100%)",
                 }}
               />
             </h3>
@@ -296,13 +348,14 @@ export default function ModernSplitTheme() {
               {skills.map((skill, i) => (
                 <li
                   key={i}
-                  className="flex items-center px-[13px] py-[6px] rounded-full text-[11px] font-semibold text-slate-200"
+                  className="flex items-center px-[13px] py-[6px] rounded-full text-[11px] font-semibold"
                   style={{
                     background:
-                      "linear-gradient(135deg,rgba(30,41,59,0.9),rgba(15,23,42,0.95))",
+                      "linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)",
                     border: "1px solid rgba(100,116,139,0.35)",
                     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
                     letterSpacing: "0.02em",
+                    color: "#e2e8f0",
                   }}
                 >
                   {skill}
@@ -316,17 +369,16 @@ export default function ModernSplitTheme() {
       {/* ══ SAĞ KOLON ══ */}
       <div
         className="w-[62%] flex flex-col relative"
-        style={{ padding: "13mm 12mm 12mm", gap: "9mm" }}
+        style={{
+          padding: "13mm 12mm 12mm",
+          gap: "9mm",
+          background: "linear-gradient(160deg, #ffffff 0%, #f8fafc 100%)",
+        }}
       >
+        {/* Dev "CV" watermark — sadece preview */}
         <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "linear-gradient(160deg,#ffffff 0%,#f8fafc 100%)",
-          }}
-          aria-hidden="true"
-        />
-        <div
-          className="absolute top-16 right-8 font-black tracking-tighter select-none pointer-events-none print:opacity-[0.018]"
+          data-decor="true"
+          className="absolute top-16 right-8 font-black tracking-tighter select-none pointer-events-none print:hidden"
           style={{
             fontSize: 110,
             color: "rgba(15,23,42,0.028)",
@@ -347,19 +399,20 @@ export default function ModernSplitTheme() {
             <span className="sr-only">Professional Summary</span>
             <div className="flex items-center gap-3 mb-5">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-blue-600 shrink-0"
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                 style={{
                   background: "rgba(219,234,254,0.8)",
                   border: "1px solid rgba(147,197,253,0.5)",
                   boxShadow: "0 1px 3px rgba(59,130,246,0.1)",
+                  color: "#2563eb",
                 }}
                 aria-hidden="true"
               >
                 <Award className="w-[18px] h-[18px]" aria-hidden="true" />
               </div>
               <h3
-                className="text-[21px] font-black text-slate-900 uppercase"
-                style={{ letterSpacing: "0.14em" }}
+                className="text-[21px] font-black uppercase"
+                style={{ letterSpacing: "0.14em", color: "#0f172a" }}
               >
                 Hakkımda
               </h3>
@@ -367,12 +420,15 @@ export default function ModernSplitTheme() {
                 className="flex-1 h-px ml-2"
                 style={{
                   background:
-                    "linear-gradient(90deg,rgba(59,130,246,0.25),transparent)",
+                    "linear-gradient(90deg, rgba(59,130,246,0.25) 0%, transparent 100%)",
                 }}
                 aria-hidden="true"
               />
             </div>
-            <p className="text-[12.5px] text-slate-600 leading-[1.85] text-justify font-medium">
+            <p
+              className="text-[12.5px] leading-[1.85] text-justify font-medium"
+              style={{ color: "#475569" }}
+            >
               {personalInfo.summary}
             </p>
           </section>
@@ -389,19 +445,20 @@ export default function ModernSplitTheme() {
             <span className="sr-only">Work Experience</span>
             <div className="flex items-center gap-3 mb-6">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-blue-600 shrink-0"
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                 style={{
                   background: "rgba(219,234,254,0.8)",
                   border: "1px solid rgba(147,197,253,0.5)",
                   boxShadow: "0 1px 3px rgba(59,130,246,0.1)",
+                  color: "#2563eb",
                 }}
                 aria-hidden="true"
               >
                 <Briefcase className="w-[18px] h-[18px]" aria-hidden="true" />
               </div>
               <h3
-                className="text-[21px] font-black text-slate-900 uppercase"
-                style={{ letterSpacing: "0.14em" }}
+                className="text-[21px] font-black uppercase"
+                style={{ letterSpacing: "0.14em", color: "#0f172a" }}
               >
                 Deneyim
               </h3>
@@ -409,7 +466,7 @@ export default function ModernSplitTheme() {
                 className="flex-1 h-px ml-2"
                 style={{
                   background:
-                    "linear-gradient(90deg,rgba(59,130,246,0.25),transparent)",
+                    "linear-gradient(90deg, rgba(59,130,246,0.25) 0%, transparent 100%)",
                 }}
                 aria-hidden="true"
               />
@@ -426,8 +483,9 @@ export default function ModernSplitTheme() {
                   data-ats-entry="job"
                 >
                   <div
-                    className="absolute -left-[9px] top-[5px] w-[16px] h-[16px] rounded-full bg-white"
+                    className="absolute -left-[9px] top-[5px] w-[16px] h-[16px] rounded-full"
                     style={{
+                      background: "#ffffff",
                       border: "3.5px solid #3b82f6",
                       boxShadow: "0 0 0 3px rgba(59,130,246,0.12)",
                     }}
@@ -439,7 +497,7 @@ export default function ModernSplitTheme() {
                       style={{
                         height: "calc(100% + 28px)",
                         background:
-                          "linear-gradient(180deg,#3b82f6,transparent)",
+                          "linear-gradient(180deg, #3b82f6 0%, transparent 100%)",
                         opacity: 0.3,
                       }}
                       aria-hidden="true"
@@ -450,7 +508,8 @@ export default function ModernSplitTheme() {
                     <div className="w-[68%]">
                       <span className="sr-only">Job Title: </span>
                       <h4
-                        className="font-black text-slate-900 text-[16px] leading-snug"
+                        className="font-black text-[16px] leading-snug"
+                        style={{ color: "#0f172a" }}
                         data-ats-field="job-title"
                       >
                         {exp.position}
@@ -458,12 +517,14 @@ export default function ModernSplitTheme() {
                       {exp.company && (
                         <div className="flex items-center gap-1.5 mt-[5px]">
                           <ChevronRight
-                            className="w-[11px] h-[11px] text-blue-500 shrink-0"
+                            className="w-[11px] h-[11px] shrink-0"
+                            style={{ color: "#3b82f6" }}
                             aria-hidden="true"
                           />
                           <span className="sr-only">Company: </span>
                           <span
-                            className="text-[11px] font-bold text-slate-500 uppercase tracking-widest"
+                            className="text-[11px] font-bold uppercase tracking-widest"
+                            style={{ color: "#64748b" }}
                             data-ats-field="company"
                           >
                             {exp.company}
@@ -477,9 +538,9 @@ export default function ModernSplitTheme() {
                         <div
                           className="text-[10px] font-bold px-[10px] py-[5px] rounded-lg flex items-center gap-1 whitespace-nowrap"
                           style={{
-                            background: "rgba(241,245,249,1)",
-                            border: "1px solid rgba(226,232,240,1)",
-                            color: "rgba(100,116,139,1)",
+                            background: "#f1f5f9",
+                            border: "1px solid #e2e8f0",
+                            color: "#64748b",
                             boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                           }}
                         >
@@ -491,7 +552,8 @@ export default function ModernSplitTheme() {
                           )}
                           {exp.startDate && exp.endDate && (
                             <span
-                              className="text-slate-300 mx-0.5"
+                              className="mx-0.5"
+                              style={{ color: "#cbd5e1" }}
                               aria-hidden="true"
                             >
                               –
@@ -509,7 +571,8 @@ export default function ModernSplitTheme() {
 
                   {exp.description && (
                     <p
-                      className="text-[12px] text-slate-500 leading-[1.78] text-justify mt-2 font-medium"
+                      className="text-[12px] leading-[1.78] text-justify mt-2 font-medium"
+                      style={{ color: "#64748b" }}
                       data-ats-field="description"
                     >
                       {exp.description}
@@ -531,11 +594,12 @@ export default function ModernSplitTheme() {
             <span className="sr-only">Education</span>
             <div className="flex items-center gap-3 mb-6">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-blue-600 shrink-0"
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                 style={{
                   background: "rgba(219,234,254,0.8)",
                   border: "1px solid rgba(147,197,253,0.5)",
                   boxShadow: "0 1px 3px rgba(59,130,246,0.1)",
+                  color: "#2563eb",
                 }}
                 aria-hidden="true"
               >
@@ -545,8 +609,8 @@ export default function ModernSplitTheme() {
                 />
               </div>
               <h3
-                className="text-[21px] font-black text-slate-900 uppercase"
-                style={{ letterSpacing: "0.14em" }}
+                className="text-[21px] font-black uppercase"
+                style={{ letterSpacing: "0.14em", color: "#0f172a" }}
               >
                 Eğitim
               </h3>
@@ -554,7 +618,7 @@ export default function ModernSplitTheme() {
                 className="flex-1 h-px ml-2"
                 style={{
                   background:
-                    "linear-gradient(90deg,rgba(59,130,246,0.25),transparent)",
+                    "linear-gradient(90deg, rgba(59,130,246,0.25) 0%, transparent 100%)",
                 }}
                 aria-hidden="true"
               />
@@ -573,9 +637,9 @@ export default function ModernSplitTheme() {
                   <div
                     className="absolute -left-[8px] top-[6px] w-[14px] h-[14px] rounded-full"
                     style={{
-                      background: "rgba(241,245,249,1)",
-                      border: "2.5px solid rgba(203,213,225,1)",
-                      boxShadow: "0 0 0 3px rgba(255,255,255,1)",
+                      background: "#f1f5f9",
+                      border: "2.5px solid #cbd5e1",
+                      boxShadow: "0 0 0 3px #ffffff",
                     }}
                     aria-hidden="true"
                   />
@@ -584,7 +648,8 @@ export default function ModernSplitTheme() {
                     <div className="w-[68%]">
                       <span className="sr-only">School: </span>
                       <h4
-                        className="font-black text-slate-900 text-[15px] leading-snug"
+                        className="font-black text-[15px] leading-snug"
+                        style={{ color: "#0f172a" }}
                         data-ats-field="school"
                       >
                         {edu.school}
@@ -594,7 +659,8 @@ export default function ModernSplitTheme() {
                           <>
                             <span className="sr-only">Degree: </span>
                             <span
-                              className="font-bold text-blue-600"
+                              className="font-bold"
+                              style={{ color: "#2563eb" }}
                               data-ats-field="degree"
                             >
                               {edu.degree}
@@ -603,7 +669,8 @@ export default function ModernSplitTheme() {
                         )}
                         {edu.degree && edu.fieldOfStudy && (
                           <span
-                            className="text-slate-300 font-black px-0.5"
+                            className="font-black px-0.5"
+                            style={{ color: "#cbd5e1" }}
                             aria-hidden="true"
                           >
                             •
@@ -613,7 +680,8 @@ export default function ModernSplitTheme() {
                           <>
                             <span className="sr-only">Field of Study: </span>
                             <span
-                              className="font-semibold text-slate-500"
+                              className="font-semibold"
+                              style={{ color: "#64748b" }}
                               data-ats-field="field-of-study"
                             >
                               {edu.fieldOfStudy}
@@ -626,11 +694,12 @@ export default function ModernSplitTheme() {
                     {(edu.startDate || edu.endDate) && (
                       <div className="w-[30%] flex justify-end mt-[2px]">
                         <div
-                          className="text-[10px] font-bold px-[10px] py-[5px] rounded-md flex items-center gap-1 shadow-sm"
+                          className="text-[10px] font-bold px-[10px] py-[5px] rounded-md flex items-center gap-1"
                           style={{
                             background: "#ffffff",
-                            border: "1px solid rgba(226,232,240,1)",
-                            color: "rgba(100,116,139,1)",
+                            border: "1px solid #e2e8f0",
+                            color: "#64748b",
+                            boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                           }}
                         >
                           <span className="sr-only">Dates: </span>
@@ -641,7 +710,8 @@ export default function ModernSplitTheme() {
                           )}
                           {edu.startDate && edu.endDate && (
                             <span
-                              className="text-slate-300 mx-0.5"
+                              className="mx-0.5"
+                              style={{ color: "#cbd5e1" }}
                               aria-hidden="true"
                             >
                               –

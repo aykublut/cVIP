@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useReactToPrint } from "react-to-print";
 import { useCVStore } from "@/store/useCVStore";
 import { THEMES } from "@/lib/themes";
 import {
   ChevronRight,
   ChevronLeft,
-  Hexagon,
   Download,
   Sparkles,
   Palette,
@@ -46,34 +44,72 @@ const STEPS = [
 export default function InlineCV() {
   const [currentStep, setCurrentStep] = useState(0);
   const { activeThemeId, setTheme } = useCVStore();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Mobil Önizleme Çekmeceleri
   const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
   const [isMobileThemeMenuOpen, setIsMobileThemeMenuOpen] = useState(false);
 
-  // PDF Baskı Motoru
+  // A4 İçerik Referansı
   const contentRef = useRef<HTMLDivElement>(null);
-  const handlePrint = useReactToPrint({
-    contentRef: contentRef,
-    documentTitle: `CV_Export`,
-    pageStyle: `
-    @page {
-      size: A4;
-      margin: 0;
-    }
-    @media print {
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        color-adjust: exact !important;
+
+  // ─── PDF Motoru: Server-side Puppeteer (tüm platformlarda birebir, ATS dostu) ───
+  const handlePrint = async () => {
+    if (!contentRef.current || isGenerating) return;
+    setIsGenerating(true);
+
+    try {
+      // Fontların tam yüklenmesini bekle
+      await document.fonts.ready;
+
+      // A4 içeriğinin HTML'ini al — tüm inline style'lar, data attribute'lar dahil
+      const clone = contentRef.current.cloneNode(true) as HTMLDivElement;
+      clone.setAttribute("data-pdf-root", "true");
+      const html = clone.outerHTML;
+
+      // Sayfadaki tüm stilleri topla (Tailwind dahil)
+      const css = Array.from(document.styleSheets)
+        .map((sheet) => {
+          try {
+            return Array.from(sheet.cssRules || [])
+              .map((rule) => rule.cssText)
+              .join("\n");
+          } catch {
+            // CORS korumalı stylesheet'ler (örn. Google Fonts)
+            return "";
+          }
+        })
+        .filter(Boolean)
+        .join("\n");
+
+      const response = await fetch("/api/generate-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html, css }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Sunucu hatası: ${response.status}`);
       }
-      body {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
+
+      // PDF'i indir
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "CV_cVIP.pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("PDF oluşturma hatası:", err);
+      alert("PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setIsGenerating(false);
     }
-  `,
-  });
+  };
+  // ─────────────────────────────────────────────────────────────────────────────
 
   // Dinamik Ölçeklendirme Motoru
   const studioContainerRef = useRef<HTMLDivElement>(null);
@@ -96,14 +132,13 @@ export default function InlineCV() {
       const scaleX = (width - PADDING_X) / A4_WIDTH;
       const scaleY = (height - PADDING_Y) / A4_HEIGHT;
 
-      const optimalScale = Math.min(scaleX, scaleY);
-      setScale(Math.max(0.15, optimalScale));
+      setScale(Math.max(0.15, Math.min(scaleX, scaleY)));
     };
 
     updateScale();
     window.addEventListener("resize", updateScale);
 
-    const observer = new ResizeObserver(() => updateScale());
+    const observer = new ResizeObserver(updateScale);
     if (studioContainerRef.current)
       observer.observe(studioContainerRef.current);
 
@@ -120,21 +155,20 @@ export default function InlineCV() {
     setCurrentStep((p) => Math.min(p + 1, STEPS.length - 1));
   const prevStep = () => setCurrentStep((p) => Math.max(p - 1, 0));
 
-  // Aktif temanın adını mobilde butonda göstermek için buluyoruz
   const activeThemeName =
     THEMES.find((t) => t.id === activeThemeId)?.name || "Şablon";
 
   return (
     <div className="flex h-screen w-full bg-[#0A1930] font-sans overflow-hidden">
-      {/* ========================================================= */}
-      {/* SOL KANAT: COMMAND CENTER */}
-      {/* ========================================================= */}
+      {/* ================================================================ */}
+      {/* SOL KANAT: COMMAND CENTER                                         */}
+      {/* ================================================================ */}
       <div className="w-full lg:w-[45%] xl:w-[40%] h-full bg-white flex flex-col z-30 shadow-[30px_0_60px_-15px_rgba(0,0,0,0.3)] border-r border-[#E6F0FA] relative">
+        {/* HEADER */}
         <header className="h-20 lg:h-24 px-6 lg:px-10 flex items-center justify-between border-b border-[#F0F4F8] shrink-0 bg-white/50 backdrop-blur-md">
           <div className="flex items-center gap-3 lg:gap-4">
-            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-gradient-to-br from-[#0A1930] to-[#0052CC] flex items-center justify-center shadow-lg shadow-[#0052CC]/20 rotate-3 hover:rotate-0 transition-transform duration-500">
-              <div className="h-5 w-5"></div>
-              <Image fill alt="logo" src="/logo2.png" />
+            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-gradient-to-br from-[#0A1930] to-[#0052CC] flex items-center justify-center shadow-lg shadow-[#0052CC]/20 rotate-3 hover:rotate-0 transition-transform duration-500 relative overflow-hidden">
+              <Image fill sizes="48px" alt="logo" src="/logo2.png" />
             </div>
             <div>
               <h1 className="text-xl lg:text-2xl font-black tracking-tighter text-[#0A1930] leading-none">
@@ -146,15 +180,27 @@ export default function InlineCV() {
             </div>
           </div>
 
+          {/* Masaüstü PDF Butonu */}
           <button
-            onClick={() => handlePrint()}
-            className="hidden lg:flex group relative items-center gap-2 bg-[#F4F7FA] text-[#0A1930] px-5 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#0052CC] hover:text-white transition-all duration-500 shadow-sm active:scale-95 overflow-hidden"
+            onClick={handlePrint}
+            disabled={isGenerating}
+            className="hidden lg:flex group relative items-center gap-2 bg-[#F4F7FA] text-[#0A1930] px-5 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#0052CC] hover:text-white transition-all duration-500 shadow-sm active:scale-95 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />
-            <Download className="w-4 h-4" /> PDF İNDİR
+            {isGenerating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                Hazırlanıyor...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" /> PDF İNDİR
+              </>
+            )}
           </button>
         </header>
 
+        {/* MAIN — Form Adımları */}
         <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-12 bg-gradient-to-b from-white to-[#F9FBFF]">
           <div className="max-w-xl mx-auto pb-20 lg:pb-0">
             {currentStep === 0 && <StepPersonalInfo />}
@@ -164,11 +210,16 @@ export default function InlineCV() {
           </div>
         </main>
 
+        {/* FOOTER — Navigasyon */}
         <footer className="h-20 lg:h-28 px-6 lg:px-10 border-t border-[#F0F4F8] bg-white flex items-center justify-between shrink-0 relative z-20">
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className={`flex items-center gap-1 lg:gap-2 px-4 lg:px-6 py-3 lg:py-4 rounded-xl lg:rounded-2xl font-black text-xs transition-all duration-300 ${currentStep === 0 ? "text-[#CBD6E2] cursor-not-allowed" : "text-[#0A1930] hover:bg-[#F4F7FA] hover:text-[#0052CC]"}`}
+            className={`flex items-center gap-1 lg:gap-2 px-4 lg:px-6 py-3 lg:py-4 rounded-xl lg:rounded-2xl font-black text-xs transition-all duration-300 ${
+              currentStep === 0
+                ? "text-[#CBD6E2] cursor-not-allowed"
+                : "text-[#0A1930] hover:bg-[#F4F7FA] hover:text-[#0052CC]"
+            }`}
           >
             <ChevronLeft className="w-5 h-5" />
             <span className="hidden sm:block">GERİ</span>
@@ -178,7 +229,11 @@ export default function InlineCV() {
             {STEPS.map((step) => (
               <div
                 key={step.id}
-                className={`transition-all duration-500 rounded-full h-1.5 ${currentStep === step.id ? "w-6 lg:w-10 bg-[#0052CC] shadow-[0_0_15px_rgba(0,82,204,0.4)]" : "w-1.5 lg:w-2 bg-[#E6F0FA]"}`}
+                className={`transition-all duration-500 rounded-full h-1.5 ${
+                  currentStep === step.id
+                    ? "w-6 lg:w-10 bg-[#0052CC] shadow-[0_0_15px_rgba(0,82,204,0.4)]"
+                    : "w-1.5 lg:w-2 bg-[#E6F0FA]"
+                }`}
               />
             ))}
           </div>
@@ -186,7 +241,11 @@ export default function InlineCV() {
           <button
             onClick={nextStep}
             disabled={currentStep === STEPS.length - 1}
-            className={`flex items-center gap-2 lg:gap-3 px-6 lg:px-8 py-3 lg:py-4 rounded-xl lg:rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-500 ${currentStep === STEPS.length - 1 ? "opacity-0 pointer-events-none" : "bg-[#0A1930] text-white hover:bg-[#0052CC] hover:shadow-xl hover:shadow-[#0052CC]/20 active:scale-95"}`}
+            className={`flex items-center gap-2 lg:gap-3 px-6 lg:px-8 py-3 lg:py-4 rounded-xl lg:rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-500 ${
+              currentStep === STEPS.length - 1
+                ? "opacity-0 pointer-events-none"
+                : "bg-[#0A1930] text-white hover:bg-[#0052CC] hover:shadow-xl hover:shadow-[#0052CC]/20 active:scale-95"
+            }`}
           >
             <span className="hidden sm:block">İLERİ</span>
             <ChevronRight className="w-4 h-4" />
@@ -202,16 +261,21 @@ export default function InlineCV() {
         </button>
       </div>
 
-      {/* ========================================================= */}
-      {/* SAĞ KANAT: LIVE CANVAS & STÜDYO */}
-      {/* ========================================================= */}
+      {/* ================================================================ */}
+      {/* SAĞ KANAT: LIVE CANVAS & STÜDYO                                   */}
+      {/* ================================================================ */}
       <div
         ref={studioContainerRef}
         className={`
-          ${isMobilePreviewOpen ? "fixed inset-0 z-[100] flex flex-col animate-in slide-in-from-bottom-full duration-500 bg-[#0A1930]" : "hidden"} 
+          ${
+            isMobilePreviewOpen
+              ? "fixed inset-0 z-[100] flex flex-col animate-in slide-in-from-bottom-full duration-500 bg-[#0A1930]"
+              : "hidden"
+          }
           lg:flex lg:relative lg:flex-1 items-center justify-center overflow-hidden bg-[#0A1930]
         `}
       >
+        {/* Arka Plan Dekorasyonları */}
         <div className="absolute inset-0 opacity-[0.15] bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:32px_32px] pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] lg:w-[700px] h-[400px] lg:h-[700px] bg-[#0052CC] opacity-[0.1] blur-[100px] lg:blur-[150px] rounded-full pointer-events-none" />
 
@@ -220,23 +284,29 @@ export default function InlineCV() {
           <button
             onClick={() => {
               setIsMobilePreviewOpen(false);
-              setIsMobileThemeMenuOpen(false); // Kapatırken tema menüsünü de sıfırla
+              setIsMobileThemeMenuOpen(false);
             }}
             className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white border border-white/10 active:scale-95"
           >
             <X className="w-5 h-5" />
           </button>
+
+          {/* Mobil PDF Butonu */}
           <button
-            onClick={() => handlePrint()}
-            className="flex items-center gap-2 bg-[#0052CC] text-white px-5 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-[0_4px_15px_rgba(0,82,204,0.4)] active:scale-95"
+            onClick={handlePrint}
+            disabled={isGenerating}
+            className="flex items-center gap-2 bg-[#0052CC] text-white px-5 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-[0_4px_15px_rgba(0,82,204,0.4)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
           >
-            <Download className="w-4 h-4" /> İNDİR
+            {isGenerating ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            {isGenerating ? "Hazırlanıyor..." : "İNDİR"}
           </button>
         </div>
 
-        {/* ========================================================= */}
-        {/* PC: DİKEY TEMA SEÇİCİ (Masaüstünde Solda Durur) */}
-        {/* ========================================================= */}
+        {/* PC: Dikey Tema Seçici */}
         <div className="hidden lg:flex absolute left-8 top-1/2 -translate-y-1/2 z-[120] flex-col gap-2 bg-[#0B1A3A]/80 backdrop-blur-2xl border border-white/5 p-2.5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
           <div className="flex flex-col items-center justify-center pb-3 pt-2 border-b border-white/5 mb-1 shrink-0">
             <Palette className="w-5 h-5 text-[#00A3FF] mb-2" />
@@ -258,7 +328,11 @@ export default function InlineCV() {
                   }`}
                 >
                   <LayoutTemplate
-                    className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-white" : "text-[#8A9EBD] group-hover:text-[#00A3FF]"}`}
+                    className={`w-4 h-4 shrink-0 transition-colors ${
+                      isActive
+                        ? "text-white"
+                        : "text-[#8A9EBD] group-hover:text-[#00A3FF]"
+                    }`}
                   />
                   <span className="text-[11px] font-black tracking-wide text-left leading-tight truncate">
                     {theme.name}
@@ -272,16 +346,13 @@ export default function InlineCV() {
           </div>
         </div>
 
-        {/* ========================================================= */}
-        {/* MOBİL: TEMA ÇEKMECESİ (BOTTOM SHEET - Dikey Scroll) */}
-        {/* ========================================================= */}
+        {/* MOBİL: Tema Çekmecesi (Bottom Sheet) */}
         <div
           className={`lg:hidden absolute inset-x-0 bottom-0 z-[130] bg-[#0A1930]/95 backdrop-blur-2xl border-t border-white/10 rounded-t-[2.5rem] transition-transform duration-500 flex flex-col shadow-[0_-20px_50px_rgba(0,0,0,0.5)] ${
             isMobileThemeMenuOpen ? "translate-y-0" : "translate-y-full"
           }`}
           style={{ maxHeight: "80vh" }}
         >
-          {/* Çekmece Başlığı ve Kapatma Butonu */}
           <div className="flex items-center justify-between p-6 border-b border-white/5 shrink-0">
             <div className="flex items-center gap-3">
               <Palette className="w-5 h-5 text-[#00A3FF]" />
@@ -297,7 +368,6 @@ export default function InlineCV() {
             </button>
           </div>
 
-          {/* Sınırsız Tema Kapasiteli Grid Liste (Dikey Scroll) */}
           <div className="flex-1 overflow-y-auto custom-scrollbar p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 pb-10">
             {THEMES.map((theme) => {
               const isActive = activeThemeId === theme.id;
@@ -306,7 +376,7 @@ export default function InlineCV() {
                   key={theme.id}
                   onClick={() => {
                     setTheme(theme.id);
-                    setIsMobileThemeMenuOpen(false); // Seçince çekmeceyi otomatik kapat
+                    setIsMobileThemeMenuOpen(false);
                   }}
                   className={`relative group flex items-center justify-between p-4 rounded-[1.5rem] transition-all duration-300 ${
                     isActive
@@ -333,9 +403,13 @@ export default function InlineCV() {
           </div>
         </div>
 
-        {/* MOBİL: Yüzen Tema Değiştirme Butonu (Çekmeceyi Açar) */}
+        {/* MOBİL: Yüzen Tema Değiştirme Butonu */}
         <div
-          className={`lg:hidden absolute bottom-8 left-1/2 -translate-x-1/2 z-[120] transition-all duration-300 ${isMobileThemeMenuOpen ? "opacity-0 pointer-events-none scale-90" : "opacity-100 scale-100"}`}
+          className={`lg:hidden absolute bottom-8 left-1/2 -translate-x-1/2 z-[120] transition-all duration-300 ${
+            isMobileThemeMenuOpen
+              ? "opacity-0 pointer-events-none scale-90"
+              : "opacity-100 scale-100"
+          }`}
         >
           <button
             onClick={() => setIsMobileThemeMenuOpen(true)}
@@ -349,7 +423,6 @@ export default function InlineCV() {
             <ChevronUp className="w-4 h-4 text-[#00A3FF]" />
           </button>
         </div>
-        {/* ========================================================= */}
 
         {/* Canlı Önizleme Rozeti */}
         <div className="absolute top-8 right-10 items-center gap-3 bg-white/5 border border-white/10 backdrop-blur-xl px-5 py-2.5 rounded-2xl shadow-2xl z-20 pointer-events-none hidden lg:flex">
@@ -359,9 +432,7 @@ export default function InlineCV() {
           </span>
         </div>
 
-        {/* ========================================================= */}
-        {/* KUSURSUZ ZOOM VE SCROLL MİMARİSİ */}
-        {/* ========================================================= */}
+        {/* ── KUSURSUZ ZOOM VE SCROLL MİMARİSİ ── */}
         <div className="flex-1 w-full h-full overflow-auto custom-scrollbar flex justify-center items-center lg:pl-15 relative z-10">
           <div
             style={{
@@ -379,7 +450,7 @@ export default function InlineCV() {
             >
               <div className="absolute inset-0 bg-black/60 blur-[100px] -bottom-10 opacity-70 rounded-full pointer-events-none" />
 
-              {/* ASLA DOKUNULMAYAN KUTSAL A4 KUTUSU */}
+              {/* KUTSAL A4 KUTUSU — server'a bu HTML gönderilir */}
               <div
                 ref={contentRef}
                 className="w-[210mm] min-w-[210mm] h-[297mm] min-h-[297mm] bg-white shadow-2xl relative overflow-hidden flex flex-col ring-1 ring-white/10"

@@ -6,8 +6,14 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { CiMail } from "react-icons/ci";
 import { LuPhone, LuMapPin } from "react-icons/lu";
 
+// 🚀 NÜKLEER ÇÖZÜM 3.0: DIŞARIDAN FONT YÜKLEMEK YASAKLANDI.
+// Tüm işletim sistemlerinin kendi kusursuz yerleşik fontlarına geçildi.
+// Apple için: -apple-system (San Francisco)
+// Windows için: Segoe UI
+// Android için: Roboto
+// Evrensel Fallback: Helvetica Neue, Arial
 const FONT_STACK =
-  "'DM Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+  "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 function toDatetime(dateStr: string): string {
   if (!dateStr) return "";
@@ -55,7 +61,6 @@ export default function ModernSplitTheme() {
 
   return (
     <main
-      /* OPTİMİZASYON: "antialiased" eklendi. Yazıların PDF'te soft ve pürüzsüz çıkmasını sağlar */
       className="w-full h-full min-h-[297mm] flex bg-white text-slate-800 relative z-0 overflow-hidden antialiased"
       role="main"
       aria-label="Curriculum Vitae"
@@ -67,14 +72,14 @@ export default function ModernSplitTheme() {
       }}
     >
       <style>{`
+        /* @import komutları tamamen silindi! İşletim sisteminin fontu kullanılacak */
         *, *::before, *::after { box-sizing: border-box; }
         
-        /* TIPOGRAFİ OPTİMİZASYONU: PDF motorunu zorlayıp harfleri kusursuz dizer */
         html, body, main {
+          font-family: ${FONT_STACK} !important;
           -webkit-font-smoothing: antialiased !important;
           -moz-osx-font-smoothing: grayscale !important;
           text-rendering: optimizeLegibility !important;
-          font-feature-settings: "kern" 1, "liga" 1, "calt" 1 !important;
         }
 
         .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
@@ -205,7 +210,7 @@ export default function ModernSplitTheme() {
               .map(({ icon, label, href, value, field }) => (
                 <div
                   key={field}
-                  className="flex items-center gap-3 rounded-xl text-xs font-medium tracking-wide bg-[#1e293b] border border-[#334155] px-3 py-2"
+                  className="flex items-center gap-3 rounded-xl text-xs font-normal tracking-wide bg-[#1e293b] border border-[#334155] px-3 py-2"
                 >
                   <div
                     className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0 text-[#60a5fa] bg-[#0f172a] border border-[#1e293b]"
@@ -311,7 +316,7 @@ export default function ModernSplitTheme() {
                 aria-hidden="true"
               />
             </div>
-            <p className="text-[12.5px] leading-relaxed text-[#475569] font-medium text-left preserve-lines">
+            <p className="text-[12.5px] leading-relaxed text-[#475569] font-normal text-left preserve-lines">
               {personalInfo.summary}
             </p>
           </section>
@@ -413,7 +418,7 @@ export default function ModernSplitTheme() {
 
                   {exp.description && (
                     <p
-                      className="text-[12px] leading-relaxed mt-2 font-medium text-[#475569] text-left preserve-lines"
+                      className="text-[12px] leading-relaxed mt-2 font-normal text-[#475569] text-left preserve-lines"
                       data-ats-field="description"
                     >
                       {exp.description}

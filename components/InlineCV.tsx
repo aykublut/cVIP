@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useCVStore } from "@/store/useCVStore";
 import { THEMES } from "@/lib/themes";
+import { slugifyForFilename } from "@/lib/cv-helpers";
 import {
   ChevronRight,
   ChevronLeft,
@@ -16,13 +17,14 @@ import {
   ChevronUp,
 } from "lucide-react";
 
-// Form Bileşenleri
 import StepPersonalInfo from "./wizard/StepPersonalInfo";
 import StepExperience from "./wizard/StepExperience";
 import StepEducation from "./wizard/StepEducation";
 import StepSkills from "./wizard/StepSkills";
+import StepCertificates from "./wizard/StepCertificates";
+import StepProjects from "./wizard/StepProjects";
+import StepLanguages from "./wizard/StepLanguages";
 
-// VIP Temalar
 import ModernSplitTheme from "./themes/ModernSplitTheme";
 import MinimalistTheme from "./themes/MinimalistTheme";
 import DefaultTheme from "./themes/DefaultTheme";
@@ -39,35 +41,32 @@ const STEPS = [
   { id: 1, title: "Kariyer" },
   { id: 2, title: "Akademi" },
   { id: 3, title: "Yetenek" },
+  { id: 4, title: "Sertifika" },
+  { id: 5, title: "Proje" },
+  { id: 6, title: "Dil" },
 ];
 
 export default function InlineCV() {
   const [currentStep, setCurrentStep] = useState(0);
-  const { activeThemeId, setTheme } = useCVStore();
+  const { activeThemeId, setTheme, cvData } = useCVStore();
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Mobil Önizleme Çekmeceleri
   const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
   const [isMobileThemeMenuOpen, setIsMobileThemeMenuOpen] = useState(false);
 
-  // A4 İçerik Referansı
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // ─── PDF Motoru: Server-side Puppeteer (tüm platformlarda birebir, ATS dostu) ───
   const handlePrint = async () => {
     if (!contentRef.current || isGenerating) return;
     setIsGenerating(true);
 
     try {
-      // Fontların tam yüklenmesini bekle
       await document.fonts.ready;
 
-      // A4 içeriğinin HTML'ini al — tüm inline style'lar, data attribute'lar dahil
       const clone = contentRef.current.cloneNode(true) as HTMLDivElement;
       clone.setAttribute("data-pdf-root", "true");
       const html = clone.outerHTML;
 
-      // Sayfadaki tüm stilleri topla (Tailwind dahil)
       const css = Array.from(document.styleSheets)
         .map((sheet) => {
           try {
@@ -75,7 +74,6 @@ export default function InlineCV() {
               .map((rule) => rule.cssText)
               .join("\n");
           } catch {
-            // CORS korumalı stylesheet'ler (örn. Google Fonts)
             return "";
           }
         })
@@ -88,16 +86,16 @@ export default function InlineCV() {
         body: JSON.stringify({ html, css }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Sunucu hatası: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Sunucu hatası: ${response.status}`);
 
-      // PDF'i indir
+      const safeName = slugifyForFilename(cvData.personalInfo.fullName);
+      const filename = safeName ? `${safeName}_CV.pdf` : "CV.pdf";
+
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "CV_cVIP.pdf";
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -109,9 +107,7 @@ export default function InlineCV() {
       setIsGenerating(false);
     }
   };
-  // ─────────────────────────────────────────────────────────────────────────────
 
-  // Dinamik Ölçeklendirme Motoru
   const studioContainerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
 
@@ -158,13 +154,30 @@ export default function InlineCV() {
   const activeThemeName =
     THEMES.find((t) => t.id === activeThemeId)?.name || "Şablon";
 
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return <StepPersonalInfo />;
+      case 1:
+        return <StepExperience />;
+      case 2:
+        return <StepEducation />;
+      case 3:
+        return <StepSkills />;
+      case 4:
+        return <StepCertificates />;
+      case 5:
+        return <StepProjects />;
+      case 6:
+        return <StepLanguages />;
+      default:
+        return <StepPersonalInfo />;
+    }
+  };
+
   return (
     <div className="flex h-screen w-full bg-[#0A1930] font-sans overflow-hidden">
-      {/* ================================================================ */}
-      {/* SOL KANAT: COMMAND CENTER                                         */}
-      {/* ================================================================ */}
       <div className="w-full lg:w-[45%] xl:w-[40%] h-full bg-white flex flex-col z-30 shadow-[30px_0_60px_-15px_rgba(0,0,0,0.3)] border-r border-[#E6F0FA] relative">
-        {/* HEADER */}
         <header className="h-20 lg:h-24 px-6 lg:px-10 flex items-center justify-between border-b border-[#F0F4F8] shrink-0 bg-white/50 backdrop-blur-md">
           <div className="flex items-center gap-3 lg:gap-4">
             <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-gradient-to-br from-[#0A1930] to-[#0052CC] flex items-center justify-center shadow-lg shadow-[#0052CC]/20 rotate-3 hover:rotate-0 transition-transform duration-500 relative overflow-hidden">
@@ -180,7 +193,6 @@ export default function InlineCV() {
             </div>
           </div>
 
-          {/* Masaüstü PDF Butonu */}
           <button
             onClick={handlePrint}
             disabled={isGenerating}
@@ -200,17 +212,10 @@ export default function InlineCV() {
           </button>
         </header>
 
-        {/* MAIN — Form Adımları */}
         <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-12 bg-gradient-to-b from-white to-[#F9FBFF]">
-          <div className="max-w-xl mx-auto pb-20 lg:pb-0">
-            {currentStep === 0 && <StepPersonalInfo />}
-            {currentStep === 1 && <StepExperience />}
-            {currentStep === 2 && <StepEducation />}
-            {currentStep === 3 && <StepSkills />}
-          </div>
+          <div className="max-w-xl mx-auto pb-20 lg:pb-0">{renderStep()}</div>
         </main>
 
-        {/* FOOTER — Navigasyon */}
         <footer className="h-20 lg:h-28 px-6 lg:px-10 border-t border-[#F0F4F8] bg-white flex items-center justify-between shrink-0 relative z-20">
           <button
             onClick={prevStep}
@@ -225,14 +230,16 @@ export default function InlineCV() {
             <span className="hidden sm:block">GERİ</span>
           </button>
 
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 lg:gap-2">
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 lg:gap-1.5">
             {STEPS.map((step) => (
-              <div
+              <button
                 key={step.id}
-                className={`transition-all duration-500 rounded-full h-1.5 ${
+                onClick={() => setCurrentStep(step.id)}
+                aria-label={`${step.title} adımına git`}
+                className={`transition-all duration-500 rounded-full h-1.5 cursor-pointer ${
                   currentStep === step.id
-                    ? "w-6 lg:w-10 bg-[#0052CC] shadow-[0_0_15px_rgba(0,82,204,0.4)]"
-                    : "w-1.5 lg:w-2 bg-[#E6F0FA]"
+                    ? "w-5 lg:w-8 bg-[#0052CC] shadow-[0_0_15px_rgba(0,82,204,0.4)]"
+                    : "w-1.5 bg-[#E6F0FA] hover:bg-[#0052CC]/30"
                 }`}
               />
             ))}
@@ -252,7 +259,6 @@ export default function InlineCV() {
           </button>
         </footer>
 
-        {/* MOBİL: Yüzen Önizleme Butonu */}
         <button
           onClick={() => setIsMobilePreviewOpen(true)}
           className="lg:hidden absolute bottom-28 right-6 z-40 bg-gradient-to-r from-[#0052CC] to-[#00A3FF] text-white px-5 py-3.5 rounded-full shadow-[0_10px_25px_rgba(0,82,204,0.4)] flex items-center gap-2 font-black text-xs uppercase tracking-widest active:scale-95 transition-transform"
@@ -261,9 +267,6 @@ export default function InlineCV() {
         </button>
       </div>
 
-      {/* ================================================================ */}
-      {/* SAĞ KANAT: LIVE CANVAS & STÜDYO                                   */}
-      {/* ================================================================ */}
       <div
         ref={studioContainerRef}
         className={`
@@ -275,11 +278,9 @@ export default function InlineCV() {
           lg:flex lg:relative lg:flex-1 items-center justify-center overflow-hidden bg-[#0A1930]
         `}
       >
-        {/* Arka Plan Dekorasyonları */}
         <div className="absolute inset-0 opacity-[0.15] bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:32px_32px] pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] lg:w-[700px] h-[400px] lg:h-[700px] bg-[#0052CC] opacity-[0.1] blur-[100px] lg:blur-[150px] rounded-full pointer-events-none" />
 
-        {/* MOBİL: Üst Kontrol Barı */}
         <div className="lg:hidden w-full flex items-center justify-between p-5 relative z-[110] bg-[#0A1930]/80 backdrop-blur-md border-b border-white/5 shrink-0">
           <button
             onClick={() => {
@@ -291,7 +292,6 @@ export default function InlineCV() {
             <X className="w-5 h-5" />
           </button>
 
-          {/* Mobil PDF Butonu */}
           <button
             onClick={handlePrint}
             disabled={isGenerating}
@@ -306,7 +306,6 @@ export default function InlineCV() {
           </button>
         </div>
 
-        {/* PC: Dikey Tema Seçici */}
         <div className="hidden lg:flex absolute left-8 top-1/2 -translate-y-1/2 z-[120] flex-col gap-2 bg-[#0B1A3A]/80 backdrop-blur-2xl border border-white/5 p-2.5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
           <div className="flex flex-col items-center justify-center pb-3 pt-2 border-b border-white/5 mb-1 shrink-0">
             <Palette className="w-5 h-5 text-[#00A3FF] mb-2" />
@@ -346,7 +345,6 @@ export default function InlineCV() {
           </div>
         </div>
 
-        {/* MOBİL: Tema Çekmecesi (Bottom Sheet) */}
         <div
           className={`lg:hidden absolute inset-x-0 bottom-0 z-[130] bg-[#0A1930]/95 backdrop-blur-2xl border-t border-white/10 rounded-t-[2.5rem] transition-transform duration-500 flex flex-col shadow-[0_-20px_50px_rgba(0,0,0,0.5)] ${
             isMobileThemeMenuOpen ? "translate-y-0" : "translate-y-full"
@@ -403,7 +401,6 @@ export default function InlineCV() {
           </div>
         </div>
 
-        {/* MOBİL: Yüzen Tema Değiştirme Butonu */}
         <div
           className={`lg:hidden absolute bottom-8 left-1/2 -translate-x-1/2 z-[120] transition-all duration-300 ${
             isMobileThemeMenuOpen
@@ -424,7 +421,6 @@ export default function InlineCV() {
           </button>
         </div>
 
-        {/* Canlı Önizleme Rozeti */}
         <div className="absolute top-8 right-10 items-center gap-3 bg-white/5 border border-white/10 backdrop-blur-xl px-5 py-2.5 rounded-2xl shadow-2xl z-20 pointer-events-none hidden lg:flex">
           <Sparkles className="w-3.5 h-3.5 text-[#00A3FF]" />
           <span className="text-[9px] font-black text-white/70 uppercase tracking-[0.3em]">
@@ -432,7 +428,6 @@ export default function InlineCV() {
           </span>
         </div>
 
-        {/* ── KUSURSUZ ZOOM VE SCROLL MİMARİSİ ── */}
         <div className="flex-1 w-full h-full overflow-auto custom-scrollbar flex justify-center items-center lg:pl-15 relative z-10">
           <div
             style={{
@@ -450,7 +445,6 @@ export default function InlineCV() {
             >
               <div className="absolute inset-0 bg-black/60 blur-[100px] -bottom-10 opacity-70 rounded-full pointer-events-none" />
 
-              {/* KUTSAL A4 KUTUSU — server'a bu HTML gönderilir */}
               <div
                 ref={contentRef}
                 className="w-[210mm] min-w-[210mm] h-[297mm] min-h-[297mm] bg-white shadow-2xl relative overflow-hidden flex flex-col ring-1 ring-white/10"

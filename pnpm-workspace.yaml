@@ -3,4 +3,5 @@ ignoredBuiltDependencies:
   - unrs-resolver
 onlyBuiltDependencies:
   - core-js
+  - msw
   - puppeteer

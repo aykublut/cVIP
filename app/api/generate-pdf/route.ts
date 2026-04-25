@@ -6,11 +6,6 @@ export const dynamic = "force-dynamic";
 
 const isDev = process.env.NODE_ENV === "development";
 
-/**
- * Ortama göre Chromium başlatır:
- * - Development: yerel `puppeteer` (tam Chromium indirir)
- * - Production (Vercel): `puppeteer-core` + `@sparticuz/chromium` (küçük, serverless-uyumlu)
- */
 async function launchBrowser() {
   if (isDev) {
     const puppeteer = (await import("puppeteer")).default;
@@ -20,7 +15,6 @@ async function launchBrowser() {
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
-        // ✅ OPTİMİZASYON: Tırtıklı fontları engeller, grayscale zorlar
         "--disable-font-subpixel-aliasing",
       ],
     });
@@ -34,7 +28,6 @@ async function launchBrowser() {
     args: [
       ...chromium.args,
       "--disable-dev-shm-usage",
-      // ✅ OPTİMİZASYON: Vercel ortamında da pürüzsüzleştirme
       "--disable-font-subpixel-aliasing",
     ],
     executablePath: await chromium.executablePath(),
@@ -55,11 +48,12 @@ export async function POST(req: NextRequest) {
     browser = await launchBrowser();
     const page = await browser.newPage();
 
-    // A4 yüksek çözünürlük
+    // 🚀 NÜKLEER ÇÖZÜM 1: deviceScaleFactor 4'e çıkarıldı.
+    // Bu, dikey çizgilerdeki (l ve ı) piksel yuvarlama hatasını (bold görünümü) yok eder.
     await page.setViewport({
-      width: 794, // 210mm @ 96dpi
-      height: 1123, // 297mm @ 96dpi
-      deviceScaleFactor: 2, // Retina kalitesi
+      width: 794,
+      height: 1123,
+      deviceScaleFactor: 4, // 2'den 4'e yükseltildi (Ultra-High Precision)
     });
 
     const fullHtml = `<!DOCTYPE html>
@@ -69,23 +63,28 @@ export async function POST(req: NextRequest) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap&subset=latin,latin-ext" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap&subset=latin,latin-ext" rel="stylesheet">
   <style>
-    /* ✅ KUSURSUZ PDF TİPOGRAFİSİ İÇİN HAYATİ KURALLAR */
+    /* 🚀 NÜKLEER ÇÖZÜM 2 & 3: CSS ZORLAMALARI */
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
       
-      /* 1. LİGATÜR İPTALİ: l, ı, i, f harflerinin yapışmasını ve bozulmasını engeller */
+      /* PDF motorunun fontları manipüle etmesini kesin olarak yasakla */
+      font-synthesis: none !important; /* Tarayıcının sahte bold yapmasını engeller */
+      font-optical-sizing: none !important; /* Variable font bozulmalarını engeller */
+      
+      /* Mikro-Nudge: Harfleri piksel gridinden hafifçe kaydırarak yuvarlama hatasını kırar */
+      letter-spacing: 0.02px !important;
+      
+      /* Önceki kalkanlarımızı tutuyoruz */
       font-variant-ligatures: none !important;
-      
-      /* 2. GEOMETRİK KESİNLİK: Chromium'un harf aralığı (kerning) hatasını çözer */
-      text-rendering: geometricPrecision !important;
-      
-      /* 3. SOFT GÖRÜNÜM: PDF'e basılırken piksellenmeyi engeller */
       -webkit-font-smoothing: antialiased !important;
       -moz-osx-font-smoothing: grayscale !important;
+      
+      /* Stroke hack'i görünmez bir renge çektik ki leke yapmasın */
+      -webkit-text-stroke: 0.05px rgba(255,255,255,0.01) !important;
     }
     
     html, body {
@@ -94,6 +93,8 @@ export async function POST(req: NextRequest) {
       width: 210mm;
       height: 297mm;
       background: #ffffff;
+      /* Rendering motorunu donanımsal hizalamaya zorlar */
+      transform: translateZ(0); 
     }
     @page {
       size: A4;
@@ -114,7 +115,6 @@ export async function POST(req: NextRequest) {
       timeout: 30000,
     });
 
-    // Fontların tam yüklenmesini bekle
     await page.evaluateHandle("document.fonts.ready");
 
     const pdfBuffer = await page.pdf({

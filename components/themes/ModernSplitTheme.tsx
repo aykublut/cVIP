@@ -1,541 +1,538 @@
 "use client";
 
 import { useCVStore } from "@/store/useCVStore";
-import { Briefcase, GraduationCap, Award, ChevronRight } from "lucide-react";
-import { FaGithub, FaLinkedin } from "react-icons/fa";
-import { CiMail } from "react-icons/ci";
-import { LuPhone, LuMapPin } from "react-icons/lu";
 
-// 🚀 NÜKLEER ÇÖZÜM 3.0: DIŞARIDAN FONT YÜKLEMEK YASAKLANDI.
-// Tüm işletim sistemlerinin kendi kusursuz yerleşik fontlarına geçildi.
-// Apple için: -apple-system (San Francisco)
-// Windows için: Segoe UI
-// Android için: Roboto
-// Evrensel Fallback: Helvetica Neue, Arial
-const FONT_STACK =
-  "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const FONT_STACK = "'Calibri', 'Arial', 'Helvetica Neue', Helvetica, sans-serif";
 
-function toDatetime(dateStr: string): string {
-  if (!dateStr) return "";
-  const months: Record<string, string> = {
-    ocak: "01",
-    şubat: "02",
-    mart: "03",
-    nisan: "04",
-    mayıs: "05",
-    haziran: "06",
-    temmuz: "07",
-    ağustos: "08",
-    eylul: "09",
-    eylül: "09",
-    ekim: "10",
-    kasım: "11",
-    aralık: "12",
-    january: "01",
-    february: "02",
-    march: "03",
-    april: "04",
-    may: "05",
-    june: "06",
-    july: "07",
-    august: "08",
-    september: "09",
-    october: "10",
-    november: "11",
-    december: "12",
-  };
-  const lower = dateStr.toLowerCase().trim();
-  if (["günümüz", "present", "halen", "devam ediyor"].includes(lower))
-    return "";
-  const year = lower.match(/\d{4}/)?.[0];
-  if (!year) return "";
-  for (const [name, num] of Object.entries(months)) {
-    if (lower.includes(name)) return `${year}-${num}`;
-  }
-  return year;
+const MONTHS_TR = [
+  "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+  "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
+];
+
+function formatDate(iso: string): string {
+  if (!iso) return "";
+  if (iso === "present") return "Günümüz";
+  const [year, month] = iso.split("-");
+  const idx = parseInt(month, 10) - 1;
+  if (isNaN(idx) || idx < 0 || idx > 11) return iso;
+  return `${MONTHS_TR[idx]} ${year}`;
+}
+
+function formatDateRange(start: string, end: string): string {
+  const s = formatDate(start);
+  const e = formatDate(end);
+  if (s && e) return `${s} – ${e}`;
+  return s || e;
+}
+
+function SectionHeading({ tr, en }: { tr: string; en: string }) {
+  return (
+    <h2
+      style={{
+        fontSize: "11.5pt",
+        fontWeight: 700,
+        color: "#0a1930",
+        textTransform: "uppercase",
+        letterSpacing: 0,
+        borderBottom: "1.5px solid #0052cc",
+        paddingBottom: "1.5mm",
+        marginBottom: "4mm",
+        marginTop: 0,
+      }}
+    >
+      {tr}
+      <span className="sr-only"> {en}</span>
+    </h2>
+  );
 }
 
 export default function ModernSplitTheme() {
   const { cvData } = useCVStore();
-  const { personalInfo, experiences, educations, skills } = cvData;
+  const {
+    personalInfo,
+    experiences,
+    educations,
+    skills,
+    certificates,
+    projects,
+    languages,
+  } = cvData;
 
   return (
-    <main
-      className="w-full h-full min-h-[297mm] flex bg-white text-slate-800 relative z-0 overflow-hidden antialiased"
-      role="main"
-      aria-label="Curriculum Vitae"
-      data-ats-document="resume"
+    <div
+      data-ats-document="true"
       style={{
+        position: "relative",
+        width: "210mm",
+        minHeight: "297mm",
+        backgroundColor: "#ffffff",
         fontFamily: FONT_STACK,
+        color: "#1a1a2e",
+        fontSize: "10.5pt",
+        lineHeight: "1.15",
         WebkitPrintColorAdjust: "exact",
         printColorAdjust: "exact",
       }}
     >
       <style>{`
-        /* @import komutları tamamen silindi! İşletim sisteminin fontu kullanılacak */
-        *, *::before, *::after { box-sizing: border-box; }
-        
-        html, body, main {
-          font-family: ${FONT_STACK} !important;
-          -webkit-font-smoothing: antialiased !important;
-          -moz-osx-font-smoothing: grayscale !important;
-          text-rendering: optimizeLegibility !important;
-        }
-
         .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
-        
-        @media print {
-          [data-decor="true"]{display:none !important}
-          *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
-        }
-        
-        .break-text {
-          word-break: break-word;
-          overflow-wrap: break-word;
-          hyphens: auto;
-        }
-        
-        .preserve-lines {
-          white-space: pre-line;
-        }
+        @media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.sr-only{display:none!important}}
       `}</style>
 
-      {/* ══ SOL KOLON ══ */}
+      {/* Sol accent çizgisi — dekoratif, ATS metin akışına dokunmaz */}
       <div
-        className="w-[38%] text-slate-300 flex flex-col relative shrink-0"
+        aria-hidden="true"
         style={{
-          backgroundColor: "#0f172a",
-          padding: "14mm 11mm 12mm",
-          WebkitPrintColorAdjust: "exact",
-          printColorAdjust: "exact",
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: "4mm",
+          backgroundColor: "#0052cc",
+          pointerEvents: "none",
+          zIndex: 0,
         }}
-      >
-        {/* Fotoğraf */}
-        {personalInfo.photo && (
-          <div className="flex justify-center mb-8 relative">
-            <img
-              src={personalInfo.photo}
-              alt={`${personalInfo.fullName} profile`}
-              className="w-36 h-36 rounded-full object-cover outline outline-[3px] outline-[#3b82f6] border-[6px] border-[#0f172a] bg-[#0f172a]"
-              fetchPriority="high"
-              loading="eager"
-            />
-          </div>
-        )}
+      />
 
-        {/* İsim & Unvan */}
-        <header className="text-center mb-10 relative break-text">
+      {/* Tüm içerik bu div içinde — accent çizgisinin sağında */}
+      <div style={{ padding: "13mm 15mm 13mm 19mm", position: "relative", zIndex: 1 }}>
+
+        {/* ── İLETİŞİM BLOĞU ── */}
+        <header data-ats-section="contact" style={{ marginBottom: "7mm" }}>
           <h1
-            className="text-[2rem] font-black uppercase tracking-wider text-white mb-2 leading-none"
-            style={{ fontFamily: FONT_STACK }}
+            data-ats-field="name"
+            style={{
+              fontSize: "26pt",
+              fontWeight: 900,
+              color: "#0a1930",
+              lineHeight: 1.05,
+              marginBottom: "2mm",
+              letterSpacing: 0,
+            }}
           >
             {personalInfo.fullName}
           </h1>
-          <div
-            className="flex items-center justify-center gap-2 my-4"
-            aria-hidden="true"
+
+          {personalInfo.jobTitle && (
+            <p
+              data-ats-field="job-title"
+              style={{
+                fontSize: "13pt",
+                fontWeight: 600,
+                color: "#0052cc",
+                marginBottom: "4mm",
+              }}
+            >
+              {personalInfo.jobTitle}
+            </p>
+          )}
+
+          <address
+            style={{
+              fontStyle: "normal",
+              fontSize: "9.5pt",
+              color: "#444444",
+              lineHeight: "1.6",
+            }}
           >
-            <div className="h-px w-8 bg-[#1e3a8a]" />
-            <div className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
-            <div className="h-px w-16 bg-[#3b82f6]" />
-            <div className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
-            <div className="h-px w-8 bg-[#1e3a8a]" />
-          </div>
-          <h2
-            className="text-[11px] font-semibold tracking-[0.25em] uppercase text-[#60a5fa] px-2 break-text"
-            style={{ fontFamily: FONT_STACK }}
-          >
-            {personalInfo.jobTitle}
-          </h2>
+            {[
+              personalInfo.location && (
+                <span key="location" data-ats-field="location">
+                  {personalInfo.location}
+                </span>
+              ),
+              personalInfo.phone && (
+                <a
+                  key="phone"
+                  href={`tel:${personalInfo.phone}`}
+                  data-ats-field="phone"
+                  style={{ color: "#444444", textDecoration: "none" }}
+                >
+                  {personalInfo.phone}
+                </a>
+              ),
+              personalInfo.email && (
+                <a
+                  key="email"
+                  href={`mailto:${personalInfo.email}`}
+                  data-ats-field="email"
+                  style={{ color: "#444444", textDecoration: "underline" }}
+                >
+                  {personalInfo.email}
+                </a>
+              ),
+            ]
+              .filter(Boolean)
+              .reduce<React.ReactNode[]>((acc, el, i) => {
+                if (i > 0) acc.push(<span key={`sep-${i}`}> | </span>);
+                acc.push(el);
+                return acc;
+              }, [])}
+
+            {(personalInfo.linkedin || personalInfo.github) && (
+              <div style={{ marginTop: "1mm" }}>
+                {[
+                  personalInfo.linkedin && (
+                    <a
+                      key="linkedin"
+                      href={`https://${personalInfo.linkedin.replace(/^https?:\/\//, "")}`}
+                      data-ats-field="linkedin"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#0052cc", textDecoration: "underline" }}
+                    >
+                      {personalInfo.linkedin}
+                    </a>
+                  ),
+                  personalInfo.github && (
+                    <a
+                      key="github"
+                      href={`https://${personalInfo.github.replace(/^https?:\/\//, "")}`}
+                      data-ats-field="github"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#0052cc", textDecoration: "underline" }}
+                    >
+                      {personalInfo.github}
+                    </a>
+                  ),
+                ]
+                  .filter(Boolean)
+                  .reduce<React.ReactNode[]>((acc, el, i) => {
+                    if (i > 0) acc.push(<span key={`sep-${i}`}> | </span>);
+                    acc.push(el);
+                    return acc;
+                  }, [])}
+              </div>
+            )}
+          </address>
         </header>
 
-        {/* İletişim */}
-        <section
-          className="mb-11 relative"
-          aria-label="Contact Information"
-          data-ats-section="contact"
-        >
-          <h3
-            className="text-[9px] font-black tracking-[0.4em] uppercase mb-5 flex items-center gap-3 text-[#94a3b8]"
-            aria-hidden="true"
-          >
-            İletişim
-            <span className="h-px flex-1 bg-[#334155]" />
-          </h3>
-
-          <address className="space-y-[7px] not-italic">
-            {[
-              {
-                show: personalInfo.email,
-                icon: <CiMail size={15} className="shrink-0" />,
-                label: "Email",
-                href: `mailto:${personalInfo.email}`,
-                value: personalInfo.email,
-                field: "email",
-              },
-              {
-                show: personalInfo.phone,
-                icon: <LuPhone size={15} className="shrink-0" />,
-                label: "Phone",
-                href: `tel:${personalInfo.phone}`,
-                value: personalInfo.phone,
-                field: "phone",
-              },
-              {
-                show: personalInfo.location,
-                icon: <LuMapPin size={15} className="shrink-0" />,
-                label: "Location",
-                href: null,
-                value: personalInfo.location,
-                field: "location",
-              },
-              {
-                show: personalInfo.linkedin,
-                icon: <FaLinkedin size={15} className="shrink-0" />,
-                label: "LinkedIn",
-                href: `https://${personalInfo.linkedin?.replace(/^https?:\/\//, "")}`,
-                value: personalInfo.linkedin,
-                field: "linkedin",
-              },
-              {
-                show: personalInfo.github,
-                icon: <FaGithub size={15} className="shrink-0" />,
-                label: "GitHub",
-                href: `https://${personalInfo.github?.replace(/^https?:\/\//, "")}`,
-                value: personalInfo.github,
-                field: "github",
-              },
-            ]
-              .filter((c) => c.show)
-              .map(({ icon, label, href, value, field }) => (
-                <div
-                  key={field}
-                  className="flex items-center gap-3 rounded-xl text-xs font-normal tracking-wide bg-[#1e293b] border border-[#334155] px-3 py-2"
-                >
-                  <div
-                    className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0 text-[#60a5fa] bg-[#0f172a] border border-[#1e293b]"
-                    aria-hidden="true"
-                  >
-                    {icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {href ? (
-                      <a
-                        href={href}
-                        className="block text-[11px] text-[#e2e8f0] truncate"
-                        target={
-                          field === "linkedin" || field === "github"
-                            ? "_blank"
-                            : undefined
-                        }
-                        rel="noopener noreferrer"
-                        data-ats-field={field}
-                      >
-                        {value}
-                      </a>
-                    ) : (
-                      <span
-                        className="block text-[11px] text-[#e2e8f0] break-text"
-                        data-ats-field={field}
-                      >
-                        {value}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-          </address>
-        </section>
-
-        {/* Yetenekler */}
-        {skills.length > 0 && (
-          <section
-            className="relative flex-1"
-            aria-label="Skills"
-            data-ats-section="skills"
-          >
-            <h3
-              className="text-[9px] font-black tracking-[0.4em] uppercase mb-5 flex items-center gap-3 text-[#94a3b8]"
-              aria-hidden="true"
-            >
-              Uzmanlık
-              <span className="h-px flex-1 bg-[#334155]" />
-            </h3>
-            <ul className="flex flex-wrap gap-2" role="list">
-              {skills.map((skill, i) => (
-                <li
-                  key={`skill-${i}-${skill.substring(0, 5)}`}
-                  className="px-3 py-1.5 rounded-full text-[11px] font-semibold text-[#e2e8f0] max-w-full truncate bg-[#1e293b] border border-[#334155]"
-                  style={{ letterSpacing: "0.02em" }}
-                >
-                  {skill}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </div>
-
-      {/* ══ SAĞ KOLON ══ */}
-      <div
-        className="w-[62%] flex flex-col relative shrink-0"
-        style={{
-          padding: "13mm 12mm 12mm",
-          gap: "9mm",
-          backgroundColor: "#ffffff",
-        }}
-      >
-        <div
-          data-decor="true"
-          className="hidden md:block absolute top-16 right-8 font-black tracking-tighter select-none pointer-events-none print:hidden opacity-5 text-[#0f172a]"
-          style={{ fontSize: 110, lineHeight: 1 }}
-          aria-hidden="true"
-        >
-          CV
-        </div>
-
-        {/* Hakkımda */}
+        {/* ── PROFESYONEL ÖZET ── */}
         {personalInfo.summary && (
-          <section
-            className="relative break-text"
-            aria-label="Professional Summary"
-            data-ats-section="summary"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[#2563eb] bg-[#eff6ff] border border-[#bfdbfe]"
-                aria-hidden="true"
-              >
-                <Award size={18} className="shrink-0" aria-hidden="true" />
-              </div>
-              <h3 className="text-[21px] font-black uppercase text-[#0f172a] tracking-widest">
-                Hakkımda
-              </h3>
-              <div
-                className="flex-1 h-px ml-2 bg-[#3b82f6] opacity-20"
-                aria-hidden="true"
-              />
-            </div>
-            <p className="text-[12.5px] leading-relaxed text-[#475569] font-normal text-left preserve-lines">
+          <section data-ats-section="summary" style={{ marginBottom: "7mm" }}>
+            <SectionHeading tr="Profesyonel Özet" en="Professional Summary" />
+            <p
+              style={{
+                fontSize: "10.5pt",
+                lineHeight: "1.4",
+                color: "#333333",
+                textAlign: "left",
+                whiteSpace: "pre-line",
+                margin: 0,
+              }}
+            >
               {personalInfo.summary}
             </p>
           </section>
         )}
 
-        {/* Deneyim */}
+        {/* ── İŞ DENEYİMİ ── */}
         {experiences.length > 0 && (
-          <section
-            className="relative"
-            aria-label="Professional Experience"
-            data-ats-section="experience"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[#2563eb] bg-[#eff6ff] border border-[#bfdbfe]"
-                aria-hidden="true"
+          <section data-ats-section="work-experience" style={{ marginBottom: "7mm" }}>
+            <SectionHeading tr="İş Deneyimi" en="Work Experience" />
+            {experiences.map((exp) => (
+              <article
+                key={exp.id}
+                data-ats-entry="experience"
+                style={{ marginBottom: "5mm" }}
               >
-                <Briefcase size={18} className="shrink-0" aria-hidden="true" />
-              </div>
-              <h3 className="text-[21px] font-black uppercase text-[#0f172a] tracking-widest">
-                Deneyim
-              </h3>
-              <div
-                className="flex-1 h-px ml-2 bg-[#3b82f6] opacity-20"
-                aria-hidden="true"
-              />
-            </div>
-
-            <div className="relative ml-5 space-y-7 pb-2 border-l-2 border-[#e2e8f0]">
-              {experiences.map((exp, idx) => (
-                <article
-                  key={exp.id || idx}
-                  className="relative pl-8 break-text"
-                  data-ats-entry="job"
+                <h3
+                  data-ats-field="position"
+                  style={{
+                    fontSize: "11pt",
+                    fontWeight: 700,
+                    color: "#0a1930",
+                    margin: "0 0 1mm",
+                  }}
                 >
-                  <div
-                    className="absolute -left-[9px] top-[5px] w-[16px] h-[16px] rounded-full bg-white border-[3px] border-[#3b82f6]"
-                    aria-hidden="true"
-                  />
-
-                  {idx === 0 && (
-                    <div
-                      className="absolute -left-[2px] top-[5px] w-[2px] bg-[#3b82f6] opacity-30"
-                      style={{ height: "calc(100% + 28px)" }}
-                      aria-hidden="true"
-                    />
-                  )}
-
-                  <div className="flex justify-between items-start mb-2 gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h4
-                        className="font-black text-[16px] leading-snug text-[#0f172a]"
-                        data-ats-field="job-title"
+                  {exp.position}
+                </h3>
+                <p style={{ fontSize: "9.5pt", color: "#555555", margin: "0 0 2mm" }}>
+                  <span data-ats-field="company" style={{ fontWeight: 600 }}>
+                    {exp.company}
+                  </span>
+                  {(exp.startDate || exp.endDate) && (
+                    <>
+                      <span> | </span>
+                      <time
+                        data-ats-field="date-range"
+                        dateTime={exp.startDate && exp.startDate !== "present" ? exp.startDate : undefined}
                       >
-                        {exp.position}
-                      </h4>
-                      {exp.company && (
-                        <div className="flex items-center gap-1.5 mt-[5px]">
-                          <ChevronRight
-                            size={11}
-                            className="shrink-0 text-[#3b82f6]"
-                            aria-hidden="true"
-                          />
-                          <span
-                            className="text-[11px] font-bold uppercase tracking-widest text-[#64748b] truncate"
-                            data-ats-field="company"
-                          >
-                            {exp.company}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {(exp.startDate || exp.endDate) && (
-                      <div className="flex shrink-0 mt-[2px]">
-                        <div className="text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 whitespace-nowrap bg-[#f8fafc] border border-[#e2e8f0] text-[#64748b]">
-                          {exp.startDate && (
-                            <time dateTime={toDatetime(exp.startDate)}>
-                              {exp.startDate}
-                            </time>
-                          )}
-                          {exp.startDate && exp.endDate && (
-                            <span
-                              className="mx-0.5 text-[#cbd5e1]"
-                              aria-hidden="true"
-                            >
-                              –
-                            </span>
-                          )}
-                          {exp.endDate && (
-                            <time dateTime={toDatetime(exp.endDate)}>
-                              {exp.endDate}
-                            </time>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {exp.description && (
-                    <p
-                      className="text-[12px] leading-relaxed mt-2 font-normal text-[#475569] text-left preserve-lines"
-                      data-ats-field="description"
-                    >
-                      {exp.description}
-                    </p>
+                        {formatDateRange(exp.startDate, exp.endDate)}
+                      </time>
+                    </>
                   )}
-                </article>
-              ))}
-            </div>
+                </p>
+                {exp.description && (
+                  <ul style={{ margin: 0, paddingLeft: "14px" }}>
+                    {exp.description
+                      .split("\n")
+                      .map((line) => line.trim().replace(/^[•\-*]\s*/, ""))
+                      .filter(Boolean)
+                      .map((line, i) => (
+                        <li
+                          key={i}
+                          data-ats-field="description"
+                          style={{
+                            fontSize: "10pt",
+                            lineHeight: "1.4",
+                            color: "#333333",
+                            marginBottom: "1mm",
+                            listStyleType: "disc",
+                          }}
+                        >
+                          {line}
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </article>
+            ))}
           </section>
         )}
 
-        {/* Eğitim */}
+        {/* ── EĞİTİM ── */}
         {educations.length > 0 && (
-          <section
-            className="relative flex-1"
-            aria-label="Education"
-            data-ats-section="education"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[#2563eb] bg-[#eff6ff] border border-[#bfdbfe]"
-                aria-hidden="true"
+          <section data-ats-section="education" style={{ marginBottom: "7mm" }}>
+            <SectionHeading tr="Eğitim" en="Education" />
+            {educations.map((edu) => (
+              <article
+                key={edu.id}
+                data-ats-entry="education"
+                style={{ marginBottom: "4mm" }}
               >
-                <GraduationCap
-                  size={18}
-                  className="shrink-0"
-                  aria-hidden="true"
-                />
-              </div>
-              <h3 className="text-[21px] font-black uppercase text-[#0f172a] tracking-widest">
-                Eğitim
-              </h3>
-              <div
-                className="flex-1 h-px ml-2 bg-[#3b82f6] opacity-20"
-                aria-hidden="true"
-              />
-            </div>
-
-            <div className="relative ml-5 space-y-6 pb-2 border-l-2 border-[#e2e8f0]">
-              {educations.map((edu, idx) => (
-                <article
-                  key={edu.id || idx}
-                  className="relative pl-8 break-text"
-                  data-ats-entry="education"
+                <h3
+                  data-ats-field="degree"
+                  style={{
+                    fontSize: "11pt",
+                    fontWeight: 700,
+                    color: "#0a1930",
+                    margin: "0 0 0.5mm",
+                  }}
                 >
-                  <div
-                    className="absolute -left-[8px] top-[6px] w-[14px] h-[14px] rounded-full bg-[#f8fafc] border-[2.5px] border-[#cbd5e1]"
-                    aria-hidden="true"
-                  />
-
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h4
-                        className="font-black text-[15px] leading-snug text-[#0f172a]"
-                        data-ats-field="school"
+                  {[edu.degree, edu.fieldOfStudy].filter(Boolean).join(" — ")}
+                </h3>
+                <p style={{ fontSize: "10pt", color: "#555555", margin: 0 }}>
+                  <span data-ats-field="school">{edu.school}</span>
+                  {(edu.startDate || edu.endDate) && (
+                    <>
+                      <span> | </span>
+                      <time
+                        data-ats-field="date-range"
+                        dateTime={edu.startDate && edu.startDate !== "present" ? edu.startDate : undefined}
                       >
-                        {edu.school}
-                      </h4>
-                      <div className="flex items-center flex-wrap gap-1 mt-[5px] text-[12px]">
-                        {edu.degree && (
-                          <span
-                            className="font-bold text-[#2563eb]"
-                            data-ats-field="degree"
-                          >
-                            {edu.degree}
-                          </span>
-                        )}
-                        {edu.degree && edu.fieldOfStudy && (
-                          <span
-                            className="font-black px-0.5 text-[#cbd5e1]"
-                            aria-hidden="true"
-                          >
-                            •
-                          </span>
-                        )}
-                        {edu.fieldOfStudy && (
-                          <span
-                            className="font-semibold text-[#64748b] break-text"
-                            data-ats-field="field-of-study"
-                          >
-                            {edu.fieldOfStudy}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {(edu.startDate || edu.endDate) && (
-                      <div className="flex shrink-0 mt-[2px]">
-                        <div className="text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 whitespace-nowrap bg-white border border-[#e2e8f0] text-[#64748b]">
-                          {edu.startDate && (
-                            <time dateTime={toDatetime(edu.startDate)}>
-                              {edu.startDate}
-                            </time>
-                          )}
-                          {edu.startDate && edu.endDate && (
-                            <span
-                              className="mx-0.5 text-[#cbd5e1]"
-                              aria-hidden="true"
-                            >
-                              –
-                            </span>
-                          )}
-                          {edu.endDate && (
-                            <time dateTime={toDatetime(edu.endDate)}>
-                              {edu.endDate}
-                            </time>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
+                        {formatDateRange(edu.startDate, edu.endDate)}
+                      </time>
+                    </>
+                  )}
+                </p>
+              </article>
+            ))}
           </section>
         )}
+
+        {/* ── BECERİLER ── */}
+        {skills.length > 0 && (
+          <section data-ats-section="skills" style={{ marginBottom: "7mm" }}>
+            <SectionHeading tr="Beceriler" en="Skills" />
+            <p
+              data-ats-field="skills"
+              style={{
+                fontSize: "10.5pt",
+                color: "#333333",
+                lineHeight: "1.6",
+                margin: 0,
+              }}
+            >
+              {skills.join(" · ")}
+            </p>
+          </section>
+        )}
+
+        {/* ── SERTİFİKALAR ── */}
+        {certificates.length > 0 && (
+          <section data-ats-section="certifications" style={{ marginBottom: "7mm" }}>
+            <SectionHeading tr="Sertifikalar" en="Certifications" />
+            {certificates.map((cert) => (
+              <article
+                key={cert.id}
+                data-ats-entry="certification"
+                style={{ marginBottom: "3mm" }}
+              >
+                <h3
+                  data-ats-field="certification-name"
+                  style={{
+                    fontSize: "10.5pt",
+                    fontWeight: 700,
+                    color: "#0a1930",
+                    margin: "0 0 0.5mm",
+                  }}
+                >
+                  {cert.name}
+                </h3>
+                <p style={{ fontSize: "9.5pt", color: "#555555", margin: 0 }}>
+                  <span data-ats-field="issuer">{cert.issuer}</span>
+                  {cert.issueDate && (
+                    <>
+                      <span> | </span>
+                      <time dateTime={cert.issueDate} data-ats-field="issue-date">
+                        {formatDate(cert.issueDate)}
+                      </time>
+                    </>
+                  )}
+                  {cert.expiryDate && (
+                    <>
+                      <span> – </span>
+                      <time dateTime={cert.expiryDate} data-ats-field="expiry-date">
+                        {formatDate(cert.expiryDate)}
+                      </time>
+                    </>
+                  )}
+                </p>
+                {cert.credentialId && (
+                  <p style={{ fontSize: "9pt", color: "#777777", margin: "0.5mm 0 0" }}>
+                    ID: <span data-ats-field="credential-id">{cert.credentialId}</span>
+                  </p>
+                )}
+                {cert.credentialUrl && (
+                  <a
+                    href={cert.credentialUrl}
+                    data-ats-field="credential-url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "block",
+                      fontSize: "9pt",
+                      color: "#0052cc",
+                      textDecoration: "underline",
+                      marginTop: "0.5mm",
+                    }}
+                  >
+                    {cert.credentialUrl}
+                  </a>
+                )}
+              </article>
+            ))}
+          </section>
+        )}
+
+        {/* ── PROJELER ── */}
+        {projects.length > 0 && (
+          <section data-ats-section="projects" style={{ marginBottom: "7mm" }}>
+            <SectionHeading tr="Projeler" en="Projects" />
+            {projects.map((proj) => (
+              <article
+                key={proj.id}
+                data-ats-entry="project"
+                style={{ marginBottom: "5mm" }}
+              >
+                <h3
+                  data-ats-field="project-name"
+                  style={{
+                    fontSize: "10.5pt",
+                    fontWeight: 700,
+                    color: "#0a1930",
+                    margin: "0 0 0.5mm",
+                  }}
+                >
+                  {proj.name}
+                  {proj.role && (
+                    <span style={{ fontWeight: 400, color: "#555555" }}>
+                      {" | "}{proj.role}
+                    </span>
+                  )}
+                  {(proj.startDate || proj.endDate) && (
+                    <span style={{ fontWeight: 400, color: "#555555" }}>
+                      {" | "}
+                      <time
+                        data-ats-field="date-range"
+                        dateTime={proj.startDate && proj.startDate !== "present" ? proj.startDate : undefined}
+                      >
+                        {formatDateRange(proj.startDate, proj.endDate)}
+                      </time>
+                    </span>
+                  )}
+                </h3>
+                {proj.technologies && (
+                  <p style={{ fontSize: "9.5pt", color: "#555555", margin: "0 0 1mm" }}>
+                    <span data-ats-field="technologies">
+                      Teknolojiler: {proj.technologies.replace(/,(?!\s)/g, ", ")}
+                    </span>
+                  </p>
+                )}
+                {proj.url && (
+                  <a
+                    href={proj.url}
+                    data-ats-field="project-url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "block",
+                      fontSize: "9pt",
+                      color: "#0052cc",
+                      textDecoration: "underline",
+                      marginBottom: "1mm",
+                    }}
+                  >
+                    {proj.url}
+                  </a>
+                )}
+                {proj.description && (
+                  <ul style={{ margin: 0, paddingLeft: "14px" }}>
+                    {proj.description
+                      .split("\n")
+                      .map((line) => line.trim().replace(/^[•\-*]\s*/, ""))
+                      .filter(Boolean)
+                      .map((line, i) => (
+                        <li
+                          key={i}
+                          data-ats-field="description"
+                          style={{
+                            fontSize: "10pt",
+                            lineHeight: "1.4",
+                            color: "#333333",
+                            marginBottom: "1mm",
+                            listStyleType: "disc",
+                          }}
+                        >
+                          {line}
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </article>
+            ))}
+          </section>
+        )}
+
+        {/* ── DİLLER ── */}
+        {languages.length > 0 && (
+          <section data-ats-section="languages">
+            <SectionHeading tr="Diller" en="Languages" />
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {languages.map((lang) => (
+                <li
+                  key={lang.id}
+                  data-ats-entry="language"
+                  style={{
+                    fontSize: "10.5pt",
+                    color: "#333333",
+                    marginBottom: "1mm",
+                  }}
+                >
+                  <span data-ats-field="language-name" style={{ fontWeight: 600 }}>
+                    {lang.name}
+                  </span>
+                  {": "}
+                  <span data-ats-field="language-level">{lang.level}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
       </div>
-    </main>
+    </div>
   );
 }

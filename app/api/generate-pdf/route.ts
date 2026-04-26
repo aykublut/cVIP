@@ -6,6 +6,11 @@ export const dynamic = "force-dynamic";
 
 const isDev = process.env.NODE_ENV === "development";
 
+// Vercel'de chromium binary'si Lambda Layer olmadığından remote URL ile indirilir.
+// /tmp'ye cache'lenir, ilk çağrıda ~10s gecikme olabilir.
+const CHROMIUM_REMOTE_URL =
+  "https://github.com/Sparticuz/chromium/releases/download/v147.0.0/chromium-v147.0.0-pack.tar";
+
 async function launchBrowser() {
   if (isDev) {
     const puppeteer = (await import("puppeteer")).default;
@@ -20,17 +25,23 @@ async function launchBrowser() {
     });
   }
 
-  // Vercel / Production
+  // Production / Vercel
   const chromium = (await import("@sparticuz/chromium")).default;
   const puppeteer = (await import("puppeteer-core")).default;
+
+  const executablePath =
+    process.env.CHROMIUM_EXECUTABLE_PATH ||
+    (await chromium.executablePath(CHROMIUM_REMOTE_URL));
 
   return puppeteer.launch({
     args: [
       ...chromium.args,
       "--disable-dev-shm-usage",
       "--disable-font-subpixel-aliasing",
+      "--single-process",
+      "--no-zygote",
     ],
-    executablePath: await chromium.executablePath(),
+    executablePath,
     headless: true,
   });
 }
@@ -64,24 +75,23 @@ export async function POST(req: NextRequest) {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
-
-      /* letter-spacing: 0 zorunlu — herhangi bir değer Chromium PDF text doubling bug'ını tetikler */
       letter-spacing: 0 !important;
-
-      /* Tarayıcının sahte bold/italic üretmesini engelle */
       font-synthesis: none !important;
       font-optical-sizing: none !important;
       font-variant-ligatures: none !important;
-
       -webkit-font-smoothing: antialiased !important;
       -moz-osx-font-smoothing: grayscale !important;
+      box-sizing: border-box;
     }
 
     html, body {
       margin: 0 !important;
       padding: 0 !important;
-      width: 210mm;
+      width: 210mm !important;
+      min-width: 210mm !important;
+      max-width: 210mm !important;
       background: #ffffff;
+      overflow: hidden;
     }
 
     @page {
@@ -89,16 +99,21 @@ export async function POST(req: NextRequest) {
       margin: 0;
     }
 
-    /* PDF kök elementi — önizleme stillerini temizle */
     [data-pdf-root] {
       box-shadow: none !important;
       --tw-ring-shadow: 0 0 #0000 !important;
-      overflow: visible !important;
-      height: auto !important;
+      --tw-shadow: 0 0 #0000 !important;
+      overflow: hidden !important;
+      width: 210mm !important;
+      min-width: 210mm !important;
+      max-width: 210mm !important;
+      height: 297mm !important;
       min-height: 297mm !important;
+      max-height: 297mm !important;
+      position: relative !important;
+      transform: none !important;
     }
 
-    /* sr-only öğeleri PDF metin katmanından çıkar — çift okuma önlenir */
     .sr-only {
       display: none !important;
     }

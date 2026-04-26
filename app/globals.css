@@ -132,11 +132,57 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* iOS dokunma highlight'ını kaldır */
+    -webkit-tap-highlight-color: transparent;
+    /* 300ms gecikmeyi ortadan kaldır */
+    touch-action: manipulation;
   }
   body {
     @apply bg-background text-foreground;
+    /* Pull-to-refresh ve yatay kaymayı engelle */
+    overscroll-behavior: none;
+    /* iOS safe area (notch / Dynamic Island) */
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
   }
   html {
     @apply font-sans;
+    /* Tüm sayfada yatay kayma yok */
+    overflow-x: hidden;
+    /* iOS momentum scroll */
+    -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Ana uygulama kapsayıcısı — iOS'ta tam ekran */
+.h-screen-safe {
+  height: 100dvh;
+  /* Fallback */
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* Scrollable alanlar için iOS momentum */
+.custom-scrollbar {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 82, 204, 0.2) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 82, 204, 0.2);
+  border-radius: 99px;
+}
+
+/* Input'larda iOS zoom'u engelle (font-size 16px altı zoom yapar) */
+input,
+textarea,
+select {
+  font-size: max(16px, 1em);
 }

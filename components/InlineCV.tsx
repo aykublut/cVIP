@@ -73,16 +73,40 @@ export default function InlineCV() {
   const [isMobileThemeMenuOpen, setIsMobileThemeMenuOpen] = useState(false);
 
   const contentRef = useRef<HTMLDivElement>(null);
+  const studioContainerRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = async () => {
-    if (!contentRef.current || isGenerating) return;
+    if (isGenerating) return;
     setIsGenerating(true);
 
+    // Mobilde studioContainer hidden olabilir — clone'lama için geçici olarak
+    // off-screen görünür yapıyoruz, PDF sonrası geri alıyoruz.
+    const container = studioContainerRef.current;
+    let restored = false;
+    const restoreContainer = () => {
+      if (restored || !container) return;
+      restored = true;
+      container.style.cssText = "";
+    };
+
     try {
+      if (container) {
+        const isHidden = getComputedStyle(container).display === "none";
+        if (isHidden) {
+          container.style.cssText =
+            "display:flex!important;position:fixed!important;left:-9999px!important;top:0!important;visibility:hidden!important;pointer-events:none!important;z-index:-1!important";
+        }
+      }
+
+      if (!contentRef.current) throw new Error("CV elementi bulunamadı.");
+
       await document.fonts.ready;
 
       const clone = contentRef.current.cloneNode(true) as HTMLDivElement;
       clone.setAttribute("data-pdf-root", "true");
+      // transform kalıntılarını temizle
+      clone.style.transform = "none";
+      clone.style.transformOrigin = "top left";
       const html = clone.outerHTML;
 
       const css = Array.from(document.styleSheets)
@@ -98,35 +122,53 @@ export default function InlineCV() {
         .filter(Boolean)
         .join("\n");
 
+      restoreContainer();
+
       const response = await fetch("/api/generate-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ html, css }),
       });
 
-      if (!response.ok) throw new Error(`Sunucu hatası: ${response.status}`);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Sunucu hatası: ${response.status}`);
+      }
 
       const safeName = slugifyForFilename(cvData.personalInfo.fullName);
       const filename = safeName ? `${safeName}_CV.pdf` : "CV.pdf";
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+
+      // iOS Safari'de link.click() çalışmaz — window.open kullan
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        window.open(url, "_blank");
+      } else {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (err) {
+      restoreContainer();
       console.error("PDF oluşturma hatası:", err);
-      alert("PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
+      alert(
+        err instanceof Error
+          ? `PDF hatası: ${err.message}`
+          : "PDF oluşturulurken bir hata oluştu.",
+      );
     } finally {
+      restoreContainer();
       setIsGenerating(false);
     }
   };
 
-  const studioContainerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
 
   useEffect(() => {
@@ -196,7 +238,7 @@ export default function InlineCV() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#0A1930] font-sans overflow-hidden">
+    <div className="flex h-dvh w-full bg-[#0A1930] font-sans overflow-hidden">
       <div className="w-full lg:w-[45%] xl:w-[40%] h-full bg-white flex flex-col z-30 shadow-[30px_0_60px_-15px_rgba(0,0,0,0.3)] border-r border-[#E6F0FA] relative">
         <header className="h-20 lg:h-24 px-6 lg:px-10 flex items-center justify-between border-b border-[#F0F4F8] shrink-0 bg-white/50 backdrop-blur-md">
           <div className="flex items-center gap-3 lg:gap-4">

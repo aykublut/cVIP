@@ -31,6 +31,7 @@ import { MonthYearPicker } from "@/components/ui/month-year-picker";
 
 import { experienceSchema } from "@/lib/schemas";
 import { hasMetric, looksLikeActionVerb } from "@/lib/cv-helpers";
+import { FieldEnhancer } from "@/components/ai/FieldEnhancer";
 
 const DESCRIPTION_MAX = 600;
 
@@ -40,7 +41,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function StepExperience() {
-  const { cvData, updateExperience, addExperience, removeExperience } =
+  const { cvData, updateExperience, addExperience, removeExperience, _hasHydrated } =
     useCVStore();
 
   const form = useForm<FormValues>({
@@ -55,11 +56,11 @@ export default function StepExperience() {
     keyName: "_key",
   });
 
-  /* Store değişikliklerini form'a yansıt (yeni ekleme/silme sonrası) */
+  /* Store değişikliklerini form'a yansıt — hydration + ekleme/silme sonrası */
   useEffect(() => {
-    form.reset({ experiences: cvData.experiences });
+    form.reset({ experiences: useCVStore.getState().cvData.experiences });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cvData.experiences.length]);
+  }, [_hasHydrated, cvData.experiences.length]);
 
   /* Form değişikliklerini store'a yaz */
   useEffect(() => {
@@ -300,6 +301,17 @@ export default function StepExperience() {
                             kritik avantaj sağlar.
                           </p>
                         )}
+                        <FieldEnhancer
+                          fieldId={`exp-desc-${index}`}
+                          fieldType="experience"
+                          currentContent={desc}
+                          jobTitle={form.watch(`experiences.${index}.position`) ?? ""}
+                          onAccept={(newContent) => {
+                            const expId = form.getValues(`experiences.${index}.id`);
+                            form.setValue(`experiences.${index}.description`, newContent, { shouldDirty: true });
+                            updateExperience(expId, { description: newContent });
+                          }}
+                        />
                         <FormMessage />
                       </FormItem>
                     )}

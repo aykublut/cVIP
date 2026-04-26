@@ -23,6 +23,7 @@ export interface PersonalInfo {
   github: string;
   summary: string;
   photo?: string;
+  showPhoto?: boolean;
 }
 
 export interface Experience {

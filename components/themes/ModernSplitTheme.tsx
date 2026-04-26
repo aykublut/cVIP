@@ -98,7 +98,45 @@ export default function ModernSplitTheme() {
       <div style={{ padding: "13mm 15mm 13mm 19mm", position: "relative", zIndex: 1 }}>
 
         {/* ── İLETİŞİM BLOĞU ── */}
-        <header data-ats-section="contact" style={{ marginBottom: "7mm" }}>
+        <header
+          data-ats-section="contact"
+          style={{
+            marginBottom: "7mm",
+            position: "relative",
+            paddingRight: (personalInfo.showPhoto && personalInfo.photo) ? "33mm" : 0,
+          }}
+        >
+          {/* Fotoğraf — position:absolute, ATS metin akışına dokunmaz */}
+          {personalInfo.showPhoto && personalInfo.photo && (
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                width: "28mm",
+                height: "28mm",
+                borderRadius: "50%",
+                overflow: "hidden",
+                border: "2px solid #0052cc",
+                flexShrink: 0,
+                userSelect: "none",
+                pointerEvents: "none",
+              }}
+            >
+              <img
+                src={personalInfo.photo}
+                alt=""
+                aria-hidden="true"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+            </div>
+          )}
           <h1
             data-ats-field="name"
             style={{

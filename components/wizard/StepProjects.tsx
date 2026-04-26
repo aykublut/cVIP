@@ -33,6 +33,7 @@ import { MonthYearPicker } from "@/components/ui/month-year-picker";
 
 import { projectSchema } from "@/lib/schemas";
 import { hasMetric, looksLikeActionVerb, normalizeUrl } from "@/lib/cv-helpers";
+import { FieldEnhancer } from "@/components/ai/FieldEnhancer";
 
 const DESC_MAX = 500;
 
@@ -40,7 +41,7 @@ const formSchema = z.object({ projects: z.array(projectSchema) });
 type FormValues = z.infer<typeof formSchema>;
 
 export default function StepProjects() {
-  const { cvData, updateProject, addProject, removeProject } = useCVStore();
+  const { cvData, updateProject, addProject, removeProject, _hasHydrated } = useCVStore();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -55,9 +56,9 @@ export default function StepProjects() {
   });
 
   useEffect(() => {
-    form.reset({ projects: cvData.projects });
+    form.reset({ projects: useCVStore.getState().cvData.projects });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cvData.projects.length]);
+  }, [_hasHydrated, cvData.projects.length]);
 
   useEffect(() => {
     const subscription = form.watch((values) => {
@@ -345,6 +346,17 @@ export default function StepProjects() {
                             )}
                           </div>
                         )}
+                        <FieldEnhancer
+                          fieldId={`proj-desc-${index}`}
+                          fieldType="project"
+                          currentContent={desc}
+                          jobTitle={form.watch(`projects.${index}.name`) ?? ""}
+                          onAccept={(newContent) => {
+                            const projId = form.getValues(`projects.${index}.id`);
+                            form.setValue(`projects.${index}.description`, newContent, { shouldDirty: true });
+                            updateProject(projId, { description: newContent });
+                          }}
+                        />
                         <FormMessage />
                       </FormItem>
                     )}

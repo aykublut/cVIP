@@ -26,7 +26,7 @@ const formSchema = z.object({ educations: z.array(educationSchema) });
 type FormValues = z.infer<typeof formSchema>;
 
 export default function StepEducation() {
-  const { cvData, updateEducation, addEducation, removeEducation } =
+  const { cvData, updateEducation, addEducation, removeEducation, _hasHydrated } =
     useCVStore();
 
   const form = useForm<FormValues>({
@@ -42,9 +42,9 @@ export default function StepEducation() {
   });
 
   useEffect(() => {
-    form.reset({ educations: cvData.educations });
+    form.reset({ educations: useCVStore.getState().cvData.educations });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cvData.educations.length]);
+  }, [_hasHydrated, cvData.educations.length]);
 
   useEffect(() => {
     const subscription = form.watch((values) => {

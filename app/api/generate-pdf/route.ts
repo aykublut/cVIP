@@ -48,12 +48,10 @@ export async function POST(req: NextRequest) {
     browser = await launchBrowser();
     const page = await browser.newPage();
 
-    // 🚀 NÜKLEER ÇÖZÜM 1: deviceScaleFactor 4'e çıkarıldı.
-    // Bu, dikey çizgilerdeki (l ve ı) piksel yuvarlama hatasını (bold görünümü) yok eder.
     await page.setViewport({
       width: 794,
       height: 1123,
-      deviceScaleFactor: 4, // 2'den 4'e yükseltildi (Ultra-High Precision)
+      deviceScaleFactor: 2,
     });
 
     const fullHtml = `<!DOCTYPE html>
@@ -61,48 +59,48 @@ export async function POST(req: NextRequest) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap&subset=latin,latin-ext" rel="stylesheet">
   <style>
-    /* 🚀 NÜKLEER ÇÖZÜM 2 & 3: CSS ZORLAMALARI */
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
-      
-      /* PDF motorunun fontları manipüle etmesini kesin olarak yasakla */
-      font-synthesis: none !important; /* Tarayıcının sahte bold yapmasını engeller */
-      font-optical-sizing: none !important; /* Variable font bozulmalarını engeller */
-      
-      /* Mikro-Nudge: Harfleri piksel gridinden hafifçe kaydırarak yuvarlama hatasını kırar */
-      letter-spacing: 0.02px !important;
-      
-      /* Önceki kalkanlarımızı tutuyoruz */
+
+      /* letter-spacing: 0 zorunlu — herhangi bir değer Chromium PDF text doubling bug'ını tetikler */
+      letter-spacing: 0 !important;
+
+      /* Tarayıcının sahte bold/italic üretmesini engelle */
+      font-synthesis: none !important;
+      font-optical-sizing: none !important;
       font-variant-ligatures: none !important;
+
       -webkit-font-smoothing: antialiased !important;
       -moz-osx-font-smoothing: grayscale !important;
-      
-      /* Stroke hack'i görünmez bir renge çektik ki leke yapmasın */
-      -webkit-text-stroke: 0.05px rgba(255,255,255,0.01) !important;
     }
-    
+
     html, body {
       margin: 0 !important;
       padding: 0 !important;
       width: 210mm;
-      height: 297mm;
       background: #ffffff;
-      /* Rendering motorunu donanımsal hizalamaya zorlar */
-      transform: translateZ(0); 
     }
+
     @page {
       size: A4;
       margin: 0;
     }
+
+    /* PDF kök elementi — önizleme stillerini temizle */
     [data-pdf-root] {
       box-shadow: none !important;
       --tw-ring-shadow: 0 0 #0000 !important;
+      overflow: visible !important;
+      height: auto !important;
+      min-height: 297mm !important;
+    }
+
+    /* sr-only öğeleri PDF metin katmanından çıkar — çift okuma önlenir */
+    .sr-only {
+      display: none !important;
     }
   </style>
   <style>${css || ""}</style>
@@ -131,7 +129,7 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": 'attachment; filename="CV_cVIP.pdf"',
+        "Content-Disposition": 'attachment; filename="CV.pdf"',
         "Cache-Control": "no-store",
       },
     });

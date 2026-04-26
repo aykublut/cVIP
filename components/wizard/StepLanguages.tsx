@@ -38,7 +38,7 @@ const formSchema = z.object({ languages: z.array(languageSchema) });
 type FormValues = z.infer<typeof formSchema>;
 
 export default function StepLanguages() {
-  const { cvData, updateLanguage, addLanguage, removeLanguage } = useCVStore();
+  const { cvData, updateLanguage, addLanguage, removeLanguage, _hasHydrated } = useCVStore();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -53,9 +53,9 @@ export default function StepLanguages() {
   });
 
   useEffect(() => {
-    form.reset({ languages: cvData.languages });
+    form.reset({ languages: useCVStore.getState().cvData.languages });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cvData.languages.length]);
+  }, [_hasHydrated, cvData.languages.length]);
 
   useEffect(() => {
     const subscription = form.watch((values) => {

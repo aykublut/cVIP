@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useCVStore } from "@/store/useCVStore";
+import { useAIStore } from "@/store/useAIStore";
 import { THEMES } from "@/lib/themes";
 import { slugifyForFilename } from "@/lib/cv-helpers";
 import {
@@ -15,6 +16,8 @@ import {
   Eye,
   X,
   ChevronUp,
+  Camera,
+  CameraOff,
 } from "lucide-react";
 
 import StepPersonalInfo from "./wizard/StepPersonalInfo";
@@ -24,6 +27,7 @@ import StepSkills from "./wizard/StepSkills";
 import StepCertificates from "./wizard/StepCertificates";
 import StepProjects from "./wizard/StepProjects";
 import StepLanguages from "./wizard/StepLanguages";
+import StepAIPanel from "./wizard/StepAIPanel";
 
 import ModernSplitTheme from "./themes/ModernSplitTheme";
 import MinimalistTheme from "./themes/MinimalistTheme";
@@ -44,11 +48,25 @@ const STEPS = [
   { id: 4, title: "Sertifika" },
   { id: 5, title: "Proje" },
   { id: 6, title: "Dil" },
+  { id: 7, title: "Analiz" },
 ];
 
 export default function InlineCV() {
   const [currentStep, setCurrentStep] = useState(0);
-  const { activeThemeId, setTheme, cvData } = useCVStore();
+  const { activeThemeId, setTheme, cvData, updatePersonalInfo } = useCVStore();
+  const calculateScore = useAIStore((s) => s.calculateScore);
+  const hasPhoto = !!cvData.personalInfo.photo;
+
+  // Debounced real-time score hesaplama
+  useEffect(() => {
+    const timer = setTimeout(() => calculateScore(cvData), 300);
+    return () => clearTimeout(timer);
+  }, [cvData, calculateScore]);
+  const showPhoto = !!cvData.personalInfo.showPhoto;
+  const togglePhoto = () => {
+    if (!hasPhoto) return;
+    updatePersonalInfo({ showPhoto: !showPhoto });
+  };
   const [isGenerating, setIsGenerating] = useState(false);
 
   const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
@@ -170,6 +188,8 @@ export default function InlineCV() {
         return <StepProjects />;
       case 6:
         return <StepLanguages />;
+      case 7:
+        return <StepAIPanel />;
       default:
         return <StepPersonalInfo />;
     }
@@ -193,10 +213,35 @@ export default function InlineCV() {
             </div>
           </div>
 
+          <div className="hidden lg:flex items-center gap-2">
+            <button
+              onClick={togglePhoto}
+              title={
+                !hasPhoto
+                  ? "Önce fotoğraf yükleyin (Kimlik adımı)"
+                  : showPhoto
+                  ? "Fotoğrafı CV'den kaldır"
+                  : "Fotoğrafı CV'ye ekle"
+              }
+              disabled={!hasPhoto}
+              className={`flex items-center gap-2 px-4 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
+                showPhoto
+                  ? "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
+                  : "bg-[#F4F7FA] text-[#8A9EBD] hover:bg-[#E6F0FA] hover:text-[#0A1930]"
+              }`}
+            >
+              {showPhoto ? (
+                <Camera className="w-4 h-4" />
+              ) : (
+                <CameraOff className="w-4 h-4" />
+              )}
+              <span className="hidden xl:block">Fotoğraf</span>
+            </button>
+
           <button
             onClick={handlePrint}
             disabled={isGenerating}
-            className="hidden lg:flex group relative items-center gap-2 bg-[#F4F7FA] text-[#0A1930] px-5 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#0052CC] hover:text-white transition-all duration-500 shadow-sm active:scale-95 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex group relative items-center gap-2 bg-[#F4F7FA] text-[#0A1930] px-5 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#0052CC] hover:text-white transition-all duration-500 shadow-sm active:scale-95 overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />
             {isGenerating ? (
@@ -210,6 +255,7 @@ export default function InlineCV() {
               </>
             )}
           </button>
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-12 bg-gradient-to-b from-white to-[#F9FBFF]">
@@ -245,18 +291,30 @@ export default function InlineCV() {
             ))}
           </div>
 
-          <button
-            onClick={nextStep}
-            disabled={currentStep === STEPS.length - 1}
-            className={`flex items-center gap-2 lg:gap-3 px-6 lg:px-8 py-3 lg:py-4 rounded-xl lg:rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-500 ${
-              currentStep === STEPS.length - 1
-                ? "opacity-0 pointer-events-none"
-                : "bg-[#0A1930] text-white hover:bg-[#0052CC] hover:shadow-xl hover:shadow-[#0052CC]/20 active:scale-95"
-            }`}
-          >
-            <span className="hidden sm:block">İLERİ</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          {currentStep === STEPS.length - 1 ? (
+            <button
+              onClick={handlePrint}
+              disabled={isGenerating}
+              className="flex items-center gap-2 lg:gap-3 px-6 lg:px-8 py-3 lg:py-4 rounded-xl lg:rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-500 bg-[#0052CC] text-white hover:bg-[#0A1930] hover:shadow-xl hover:shadow-[#0052CC]/20 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isGenerating ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:block">PDF</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={nextStep}
+              className="flex items-center gap-2 lg:gap-3 px-6 lg:px-8 py-3 lg:py-4 rounded-xl lg:rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-500 bg-[#0A1930] text-white hover:bg-[#0052CC] hover:shadow-xl hover:shadow-[#0052CC]/20 active:scale-95"
+            >
+              <span className="hidden sm:block">İLERİ</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
         </footer>
 
         <button
@@ -275,7 +333,7 @@ export default function InlineCV() {
               ? "fixed inset-0 z-[100] flex flex-col animate-in slide-in-from-bottom-full duration-500 bg-[#0A1930]"
               : "hidden"
           }
-          lg:flex lg:relative lg:flex-1 items-center justify-center overflow-hidden bg-[#0A1930]
+          lg:flex lg:flex-col lg:relative lg:flex-1 overflow-hidden bg-[#0A1930]
         `}
       >
         <div className="absolute inset-0 opacity-[0.15] bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:32px_32px] pointer-events-none" />
@@ -292,18 +350,32 @@ export default function InlineCV() {
             <X className="w-5 h-5" />
           </button>
 
-          <button
-            onClick={handlePrint}
-            disabled={isGenerating}
-            className="flex items-center gap-2 bg-[#0052CC] text-white px-5 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-[0_4px_15px_rgba(0,82,204,0.4)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-          >
-            {isGenerating ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            {hasPhoto && (
+              <button
+                onClick={togglePhoto}
+                className={`w-9 h-9 rounded-full flex items-center justify-center border active:scale-95 transition-all ${
+                  showPhoto
+                    ? "bg-amber-400/20 border-amber-400/40 text-amber-300"
+                    : "bg-white/10 border-white/10 text-white/50"
+                }`}
+              >
+                {showPhoto ? <Camera className="w-4 h-4" /> : <CameraOff className="w-4 h-4" />}
+              </button>
             )}
-            {isGenerating ? "Hazırlanıyor..." : "İNDİR"}
-          </button>
+            <button
+              onClick={handlePrint}
+              disabled={isGenerating}
+              className="flex items-center gap-2 bg-[#0052CC] text-white px-5 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-[0_4px_15px_rgba(0,82,204,0.4)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+            >
+              {isGenerating ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              {isGenerating ? "Hazırlanıyor..." : "İNDİR"}
+            </button>
+          </div>
         </div>
 
         <div className="hidden lg:flex absolute left-8 top-1/2 -translate-y-1/2 z-[120] flex-col gap-2 bg-[#0B1A3A]/80 backdrop-blur-2xl border border-white/5 p-2.5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
@@ -428,7 +500,7 @@ export default function InlineCV() {
           </span>
         </div>
 
-        <div className="flex-1 w-full h-full overflow-auto custom-scrollbar flex justify-center items-center lg:pl-15 relative z-10">
+        <div className="flex-1 min-h-0 w-full overflow-auto custom-scrollbar flex justify-center items-center lg:pl-15 relative z-10">
           <div
             style={{
               width: `calc(210mm * ${scale})`,
@@ -458,6 +530,7 @@ export default function InlineCV() {
         <div className="hidden lg:block absolute bottom-10 right-10 text-white/5 text-7xl font-black select-none pointer-events-none tracking-tighter z-0">
           cVIP
         </div>
+
       </div>
     </div>
   );

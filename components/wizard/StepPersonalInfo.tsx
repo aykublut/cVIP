@@ -37,13 +37,14 @@ import {
   normalizeLinkedIn,
   normalizeGithub,
 } from "@/lib/cv-helpers";
+import { FieldEnhancer } from "@/components/ai/FieldEnhancer";
 
 const SUMMARY_MIN = 250;
 const SUMMARY_MAX = 600;
 const PHOTO_MAX_SIZE = 2 * 1024 * 1024;
 
 export default function StepPersonalInfo() {
-  const { cvData, updatePersonalInfo } = useCVStore();
+  const { cvData, updatePersonalInfo, _hasHydrated } = useCVStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<PersonalInfoInput>({
@@ -51,6 +52,14 @@ export default function StepPersonalInfo() {
     mode: "onBlur",
     defaultValues: cvData.personalInfo,
   });
+
+  /* localStorage hydration tamamlandığında formu gerçek veriyle doldur */
+  useEffect(() => {
+    if (_hasHydrated) {
+      form.reset(useCVStore.getState().cvData.personalInfo);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [_hasHydrated]);
 
   /* Canlı senkronizasyon: form → store */
   useEffect(() => {
@@ -414,6 +423,16 @@ export default function StepPersonalInfo() {
                     className="resize-none"
                   />
                 </FormControl>
+                <FieldEnhancer
+                  fieldId="summary"
+                  fieldType="summary"
+                  currentContent={field.value ?? ""}
+                  jobTitle={form.watch("jobTitle") ?? ""}
+                  onAccept={(newContent) => {
+                    field.onChange(newContent);
+                    updatePersonalInfo({ summary: newContent });
+                  }}
+                />
                 {summaryLen > 0 && summaryLen < SUMMARY_MIN ? (
                   <FormDescription className="flex items-center gap-1 text-[9px] text-amber-500 font-bold">
                     <AlertCircle className="w-3 h-3" />

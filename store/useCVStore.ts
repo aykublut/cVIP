@@ -14,6 +14,8 @@ interface CVStore {
   cvData: CVData;
   isEditMode: boolean;
   activeThemeId: string;
+  _hasHydrated: boolean;
+  setHasHydrated: () => void;
   toggleEditMode: () => void;
   setTheme: (id: string) => void;
   updatePersonalInfo: (data: Partial<PersonalInfo>) => void;
@@ -64,6 +66,7 @@ const initialCVData: CVData = {
     github: "",
     summary: "",
     photo: "",
+    showPhoto: false,
   },
   experiences: [],
   educations: [],
@@ -163,6 +166,8 @@ export const useCVStore = create<CVStore>()(
       cvData: initialCVData,
       isEditMode: true,
       activeThemeId: "modern-split",
+      _hasHydrated: false,
+      setHasHydrated: () => set({ _hasHydrated: true }),
 
       toggleEditMode: () => set((state) => ({ isEditMode: !state.isEditMode })),
       setTheme: (id) => set({ activeThemeId: id }),
@@ -428,6 +433,9 @@ export const useCVStore = create<CVStore>()(
           isEditMode: state?.isEditMode ?? true,
           activeThemeId: state?.activeThemeId ?? "modern-split",
         } as unknown as CVStore;
+      },
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated();
       },
     },
   ),

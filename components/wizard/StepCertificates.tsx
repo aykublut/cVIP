@@ -35,7 +35,7 @@ const formSchema = z.object({ certificates: z.array(certificateSchema) });
 type FormValues = z.infer<typeof formSchema>;
 
 export default function StepCertificates() {
-  const { cvData, updateCertificate, addCertificate, removeCertificate } =
+  const { cvData, updateCertificate, addCertificate, removeCertificate, _hasHydrated } =
     useCVStore();
 
   const form = useForm<FormValues>({
@@ -51,9 +51,9 @@ export default function StepCertificates() {
   });
 
   useEffect(() => {
-    form.reset({ certificates: cvData.certificates });
+    form.reset({ certificates: useCVStore.getState().cvData.certificates });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cvData.certificates.length]);
+  }, [_hasHydrated, cvData.certificates.length]);
 
   useEffect(() => {
     const subscription = form.watch((values) => {

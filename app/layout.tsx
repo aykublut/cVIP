@@ -67,10 +67,10 @@ export default function RootLayout({
         {/* Android Chrome */}
         <meta name="mobile-web-app-capable" content="yes" />
         {/* iOS touch icon */}
-        <link rel="apple-touch-icon" href="/logo2.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/logo2.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/logo2.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/logo2.png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/logo.png" />
       </head>
       <body className="min-h-full flex flex-col">
         {children}

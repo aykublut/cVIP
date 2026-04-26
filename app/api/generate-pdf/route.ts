@@ -6,11 +6,6 @@ export const dynamic = "force-dynamic";
 
 const isDev = process.env.NODE_ENV === "development";
 
-// Vercel'de chromium binary'si Lambda Layer olmadığından remote URL ile indirilir.
-// /tmp'ye cache'lenir, ilk çağrıda ~10s gecikme olabilir.
-const CHROMIUM_REMOTE_URL =
-  "https://github.com/Sparticuz/chromium/releases/download/v147.0.0/chromium-v147.0.0-pack.tar";
-
 async function launchBrowser() {
   if (isDev) {
     const puppeteer = (await import("puppeteer")).default;
@@ -26,12 +21,14 @@ async function launchBrowser() {
   }
 
   // Production / Vercel
+  // @sparticuz/chromium binary'yi kendi paketi içinde (.br) taşır,
+  // executablePath() onu /tmp'ye açar — harici URL gerekmez.
   const chromium = (await import("@sparticuz/chromium")).default;
   const puppeteer = (await import("puppeteer-core")).default;
 
   const executablePath =
     process.env.CHROMIUM_EXECUTABLE_PATH ||
-    (await chromium.executablePath(CHROMIUM_REMOTE_URL));
+    (await chromium.executablePath());
 
   return puppeteer.launch({
     args: [

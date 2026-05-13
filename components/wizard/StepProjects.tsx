@@ -32,13 +32,27 @@ import {
 import { MonthYearPicker } from "@/components/ui/month-year-picker";
 
 import { projectSchema } from "@/lib/schemas";
-import { hasMetric, looksLikeActionVerb, normalizeUrl } from "@/lib/cv-helpers";
+import { hasMetric, looksLikeActionVerb } from "@/lib/cv-helpers";
 import { FieldEnhancer } from "@/components/ai/FieldEnhancer";
 
 const DESC_MAX = 500;
 
 const formSchema = z.object({ projects: z.array(projectSchema) });
 type FormValues = z.infer<typeof formSchema>;
+
+/**
+ * Ensures a URL always has an https:// prefix.
+ * Without a protocol, PDF viewers treat the link as a local file path
+ * (e.g. "github.com/user/repo" becomes "file:///github.com/user/repo").
+ */
+function ensureAbsoluteUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return trimmed;
+  // Already has a valid protocol — leave it alone
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  // Strip any accidental leading slashes before prepending
+  return `https://${trimmed.replace(/^\/+/, "")}`;
+}
 
 export default function StepProjects() {
   const { cvData, updateProject, addProject, removeProject, _hasHydrated } = useCVStore();
@@ -215,9 +229,9 @@ export default function StepProjects() {
                               onBlur={(e) => {
                                 field.onBlur();
                                 if (e.target.value) {
-                                  const normalized = normalizeUrl(
-                                    e.target.value,
-                                  );
+                                  // ✅ FIX: always prepend https:// so PDF viewers
+                                  // open links in the browser, not the local file system.
+                                  const normalized = ensureAbsoluteUrl(e.target.value);
                                   if (normalized !== e.target.value) {
                                     form.setValue(
                                       `projects.${index}.url`,
